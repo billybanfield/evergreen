@@ -28,6 +28,11 @@ var (
 
 var errSkippedFile = errors.New("missing optional file was skipped")
 
+type S3PutCommandWrapper struct {
+	S3PutCommand
+	Files []string
+}
+
 // A plugin command to put a resource to an s3 bucket and download it to
 // the local machine.
 type S3PutCommand struct {
@@ -226,7 +231,10 @@ func (s3pc *S3PutCommand) PutWithRetry(log plugin.Logger, com plugin.PluginCommu
 
 // Put the specified resource to s3.
 func (s3pc *S3PutCommand) Put() error {
-
+	ignorer, err := ignore.CompileIgnoreLines(s3pc.LocalFile)
+	if err != nil {
+		return err
+	}
 	fi, err := os.Stat(s3pc.LocalFile)
 	if err != nil {
 		if os.IsNotExist(err) && s3pc.Optional {

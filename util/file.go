@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	ignore "github.com/sabhiram/go-git-ignore"
 )
 
 // GetAppendingFile opens a file for appending. The file will be created
@@ -47,4 +49,23 @@ func WriteToTempFile(data string) (string, error) {
 		return "", err
 	}
 	return file.Name(), nil
+}
+
+type FilesFromIgnore struct {
+	FileNames []string
+	ignorer   ignore.GitIgnore
+}
+
+func (fs *FnameStore) walkFunc(path string, info os.FileInfo, err error) error {
+	if !info.IsDir() {
+		*fs = append(*fs, path)
+	}
+	return nil
+}
+
+func (fs *FnameStore) BuildFileList(startPath string) ([]string, error) {
+	err := filepath.Walk(startPath, fs.walkFunc)
+	if err != nil {
+		return err
+	}
 }
