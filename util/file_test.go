@@ -47,3 +47,33 @@ func TestFileExists(t *testing.T) {
 		})
 	})
 }
+
+func TestBuildFileList(t *testing.T) {
+	fnames := []string{
+		"testFile1",
+		"testFile2",
+		"testFile.go",
+		"testFile2.go",
+		"testFile3.yml",
+		"built.go",
+		"built.yml",
+		"built.cpp",
+	}
+	for _, fname := range fnames {
+		_, err := os.Create(fname)
+		testutil.HandleTestingErr(err, t, "error creating test file")
+	}
+	defer func() {
+		for _, fname := range fnames {
+			testutil.HandleTestingErr(os.Remove(fname), t, "error removing test file")
+		}
+	}()
+	Convey("When files exists", t, func() {
+		Convey("with simple string", func() {
+			files, err := BuildFileList(".", fnames[0])
+			So(err, ShouldBeNil)
+			So(files, ShouldContain, fnames[0])
+			So(files, ShouldNotContain, fnames[1])
+		})
+	})
+}

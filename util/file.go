@@ -51,21 +51,30 @@ func WriteToTempFile(data string) (string, error) {
 	return file.Name(), nil
 }
 
-type FilesFromIgnore struct {
-	FileNames []string
-	ignorer   ignore.GitIgnore
+type filesFromIgnore struct {
+	fileNames []string
+	ignorer   *ignore.GitIgnore
 }
 
-func (fs *FnameStore) walkFunc(path string, info os.FileInfo, err error) error {
-	if !info.IsDir() {
-		*fs = append(*fs, path)
+func (fi *filesFromIgnore) walkFunc(path string, info os.FileInfo, err error) error {
+	if !info.IsDir() && fi.ignorer.MatchesPath(path) {
+		fi.fileNames = append(fi.fileNames, path)
 	}
 	return nil
 }
 
-func (fs *FnameStore) BuildFileList(startPath string) ([]string, error) {
-	err := filepath.Walk(startPath, fs.walkFunc)
+func BuildFileList(startPath string, expression string) ([]string, error) {
+	ignorer, err := ignore.CompileIgnoreLines(expression)
 	if err != nil {
-		return err
+		return nil, err
 	}
+	fi := &filesFromIgnore{
+		fileNames: []string{},
+		ignorer:   ignorer,
+	}
+	err = filepath.Walk(startPath, fi.walkFunc)
+	if err != nil {
+		return nil, err
+	}
+	return fi.fileNames, nil
 }
