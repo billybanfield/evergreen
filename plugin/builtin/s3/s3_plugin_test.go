@@ -84,15 +84,18 @@ func TestS3PutAndGet(t *testing.T) {
 		var putCmd *S3PutCommand
 		var getCmd *S3GetCommand
 
-		testDataDir := "testdata"
-		remoteFile := "remote_mci_put_test.tgz"
 		bucket := "mci-test-uploads"
 		permissions := "private"
 		contentType := "application/x-tar"
-		displayName := "testfile"
 
+		Convey("When putting a single tarred file", func() {
+
+		displayName := "testfile"
+		remoteFile := "remote_mci_put_test.tgz"
+		testDataDir := "testdata"
 		// create the local directory to be tarred
 		localDirToTar := filepath.Join(testDataDir, "put_test")
+		localFileToTarNotInDir := filepath.Join(testDataDir, "put_test")
 		localFileToTar := filepath.Join(localDirToTar, "put_test_file.txt")
 		testutil.HandleTestingErr(os.RemoveAll(localDirToTar), t, "Error removing"+
 			" directory")

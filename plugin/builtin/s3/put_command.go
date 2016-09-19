@@ -3,7 +3,7 @@ package s3
 import (
 	"errors"
 	"fmt"
-	"os"
+	"net/url"
 	"path/filepath"
 	"time"
 
@@ -14,7 +14,6 @@ import (
 	"github.com/evergreen-ci/evergreen/thirdparty"
 	"github.com/evergreen-ci/evergreen/util"
 	"github.com/goamz/goamz/aws"
-	"github.com/goamz/goamz/s3"
 	"github.com/mitchellh/mapstructure"
 )
 
@@ -231,47 +230,26 @@ func (s3pc *S3PutCommand) PutWithRetry(log plugin.Logger, com plugin.PluginCommu
 
 // Put the specified resource to s3.
 func (s3pc *S3PutCommand) Put() error {
-	ignorer, err := ignore.CompileIgnoreLines(s3pc.LocalFile)
+	filesList, err := util.BuildFileList(s3pc.LocalFile)
 	if err != nil {
 		return err
 	}
-	fi, err := os.Stat(s3pc.LocalFile)
-	if err != nil {
-		if os.IsNotExist(err) && s3pc.Optional {
-			return errSkippedFile
+	for _, fpath := range filesList {
+		auth := &aws.Auth{
+			AccessKey: s3pc.AwsKey,
+			SecretKey: s3pc.AwsSecret,
 		}
-		return err
-	}
-
-	fileReader, err := os.Open(s3pc.LocalFile)
-	if err != nil {
-		if os.IsNotExist(err) && s3pc.Optional {
-			return errSkippedFile
+		s3URL := url.URL{
+			Scheme: "s3",
+			Host:   s3pc.Bucket,
+			Path:   s3pc.RemoteFile,
 		}
-		return err
+		err := thirdparty.PutS3File(auth, fpath, s3URL.String(), s3pc.ContentType, s3pc.Permissions)
+		if err != nil {
+			return err
+		}
 	}
-	defer fileReader.Close()
-
-	// get the appropriate session and bucket
-	auth := &aws.Auth{
-		AccessKey: s3pc.AwsKey,
-		SecretKey: s3pc.AwsSecret,
-	}
-	session := thirdparty.NewS3Session(auth, aws.USEast)
-
-	bucket := session.Bucket(s3pc.Bucket)
-
-	options := s3.Options{}
-	// put the data
-	return bucket.PutReader(
-		s3pc.RemoteFile,
-		fileReader,
-		fi.Size(),
-		s3pc.ContentType,
-		s3.ACL(s3pc.Permissions),
-		options,
-	)
-
+	return nil
 }
 
 // AttachTaskFiles is responsible for sending the
