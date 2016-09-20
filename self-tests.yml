@@ -959,7 +959,7 @@ buildvariants:
       - ubuntu1404-test
       expansions:
         EVGHOME_cmd: "`pwd`"
-        mongo_url: http://fastdl.mongodb.org/linux/mongodb-linux-x86_64-2.6.1.tgz
+        mongo_url: http://fastdl.mongodb.org/linux/mongodb-linux-x86_64-3.3.12.tgz
         bin_builder_env: 'GOROOT="`pwd`/go" PATH="`pwd`/go/bin:$PATH"'
         use_prebuilt_toolchain: "true"
         test_flag: "-coverprofile=coverage.out"
