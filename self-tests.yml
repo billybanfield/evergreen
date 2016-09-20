@@ -993,7 +993,7 @@ buildvariants:
       - osx-1010
       expansions:
         EVGHOME_cmd: "`pwd`"
-        mongo_url: https://fastdl.mongodb.org/osx/mongodb-osx-x86_64-2.6.5.tgz
+        mongo_url: https://fastdl.mongodb.org/osx/mongodb-osx-x86_64-3.3.12.tgz
         bin_builder_args: "dev"
         test_flag: "-coverprofile=coverage.out"
       tasks:
@@ -1013,7 +1013,7 @@ buildvariants:
       - windows-64-vs2013-compile
       expansions:
         EVGHOME_cmd: "$(cygpath -w `pwd`)"
-        mongo_url: https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2008plus-2.6.5.zip
+        mongo_url: https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2008plus-3.3.12.zip
         extension: .exe
       tasks:
       - ".nodb !make_deploy"
