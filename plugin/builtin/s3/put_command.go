@@ -44,8 +44,12 @@ type S3PutCommand struct {
 	// wishes to store in s3
 	LocalFile string `mapstructure:"local_file" plugin:"expand"`
 
+	// LocalFilesIncludeFilter is an array of expressions that specify what files should be
+	// included in this upload.
+	LocalFilesIncludeFilter []string `mapstructure:"local_files_include_filter" plugin:"expand"`
+
 	// RemoteFile is the filepath to store the file to,
-	// within an s3 bucket
+	// within an s3 bucket. Is a prefix when multiple files are uploaded via LocalFilesIncludeFilter.
 	RemoteFile string `mapstructure:"remote_file" plugin:"expand"`
 
 	// Bucket is the s3 bucket to use when storing the desired file
@@ -64,7 +68,8 @@ type S3PutCommand struct {
 	// If the list is empty, it runs for all build variants.
 	BuildVariants []string `mapstructure:"build_variants"`
 
-	// DisplayName stores the name of the file that is linked
+	// DisplayName stores the name of the file that is linked. Is a prefix when
+	// to the matched file name when multiple files are uploaded.
 	DisplayName string `mapstructure:"display_name" plugin:"expand"`
 
 	// Visibility determines who can see file links in the UI.
@@ -112,8 +117,11 @@ func (s3pc *S3PutCommand) validateParams() error {
 	if s3pc.AwsSecret == "" {
 		return fmt.Errorf("aws_secret cannot be blank")
 	}
-	if s3pc.LocalFile == "" {
-		return fmt.Errorf("local_file cannot be blank")
+	if s3pc.LocalFile == "" && len(s3pc.LocalFilesIncludeFilter) == 0 {
+		return fmt.Errorf("local_file and local_files_include_filter cannot both be blank")
+	}
+	if s3pc.LocalFile != "" && len(s3pc.LocalFilesIncludeFilter) != 0 {
+		return fmt.Errorf("local_file and local_files_include_filter cannot both be specified")
 	}
 	if s3pc.RemoteFile == "" {
 		return fmt.Errorf("remote_file cannot be blank")
@@ -230,9 +238,14 @@ func (s3pc *S3PutCommand) PutWithRetry(log plugin.Logger, com plugin.PluginCommu
 
 // Put the specified resource to s3.
 func (s3pc *S3PutCommand) Put() error {
-	filesList, err := util.BuildFileList(s3pc.LocalFile)
-	if err != nil {
-		return err
+	var filesList []string
+	if len(s3pc.LocalFileIncludesFilter) != 0 {
+		filesList, err := util.BuildFileList(s3pc.LocalFileIncludesFilter...)
+		if err != nil {
+			return err
+		}
+	} else {
+		filesList = []string{s3pc.LocalFile}
 	}
 	for _, fpath := range filesList {
 		auth := &aws.Auth{
