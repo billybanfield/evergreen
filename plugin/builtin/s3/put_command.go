@@ -239,15 +239,23 @@ func (s3pc *S3PutCommand) PutWithRetry(log plugin.Logger, com plugin.PluginCommu
 // Put the specified resource to s3.
 func (s3pc *S3PutCommand) Put() error {
 	var filesList []string
-	if len(s3pc.LocalFileIncludesFilter) != 0 {
+
+	isMulti := (len(s3pc.LocalFileIncludesFilter) != 0)
+	filesList = []string{s3pc.LocalFile}
+
+	if isMulti {
 		filesList, err := util.BuildFileList(s3pc.LocalFileIncludesFilter...)
 		if err != nil {
 			return err
 		}
-	} else {
-		filesList = []string{s3pc.LocalFile}
 	}
 	for _, fpath := range filesList {
+		fname := filepath.Base(fpath)
+		remoteName := s3pc.RemoteFile
+		if isMulti {
+			remoteName := fmt.Sprintf("%s%s", s3pc.RemoteFile, fname)
+		}
+
 		auth := &aws.Auth{
 			AccessKey: s3pc.AwsKey,
 			SecretKey: s3pc.AwsSecret,
@@ -255,9 +263,9 @@ func (s3pc *S3PutCommand) Put() error {
 		s3URL := url.URL{
 			Scheme: "s3",
 			Host:   s3pc.Bucket,
-			Path:   s3pc.RemoteFile,
+			Path:   remoteName,
 		}
-		err := thirdparty.PutS3File(auth, fpath, s3URL.String(), s3pc.ContentType, s3pc.Permissions)
+		err := thirdparty.PutS3File(auth, fname, s3URL.String(), s3pc.ContentType, s3pc.Permissions)
 		if err != nil {
 			return err
 		}
@@ -277,6 +285,7 @@ func (s3pc *S3PutCommand) AttachTaskFiles(log plugin.Logger,
 	if displayName == "" {
 		displayName = filepath.Base(s3pc.LocalFile)
 	}
+	isMulti := (len(s3pc.LocalFileIncludesFilter) != 0)
 	file := &artifact.File{
 		Name:       displayName,
 		Link:       fileLink,
