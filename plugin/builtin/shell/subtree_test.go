@@ -9,6 +9,9 @@ import (
 	"github.com/evergreen-ci/evergreen/command"
 	"github.com/evergreen-ci/evergreen/plugin/plugintest"
 	. "github.com/smartystreets/goconvey/convey"
+	"github.com/tychoish/grip"
+	"github.com/tychoish/grip/message"
+	"github.com/tychoish/grip/slogger"
 )
 
 func TestSubtreeCleanup(t *testing.T) {
@@ -26,11 +29,14 @@ func TestSubtreeCleanup(t *testing.T) {
 			Environment: env,
 		}
 		So(localCmd.Start(), ShouldBeNil)
+		grip.InfoMany(message.CollectProcessInfoSelfWithChildren()...)
 		trackProcess(id, localCmd.Cmd.Process.Pid, &plugintest.MockLogger{})
 
 		Convey("running KillSpawnedProcs should kill the process before it finishes", func() {
 			So(KillSpawnedProcs(id, &plugintest.MockLogger{}), ShouldBeNil)
+			grip.InfoMany(message.CollectProcessInfoSelfWithChildren()...)
 			So(localCmd.Cmd.Wait(), ShouldNotBeNil)
+			grip.InfoMany(message.CollectProcessInfoSelfWithChildren()...)
 			So(buf.String(), ShouldNotContainSubstring, "finish")
 		})
 	})

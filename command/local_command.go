@@ -8,6 +8,8 @@ import (
 	"sync"
 
 	"github.com/evergreen-ci/evergreen"
+	"github.com/tychoish/grip"
+	"github.com/tychoish/grip/message"
 	"github.com/tychoish/grip/slogger"
 )
 
@@ -75,9 +77,12 @@ func (lc *LocalCommand) Start() error {
 
 	// cache the command running
 	lc.Cmd = cmd
+	grip.InfoMany(message.CollectProcessInfoSelfWithChildren()...)
 
 	// start the command
-	return cmd.Start()
+	err := cmd.Start()
+	grip.InfoMany(message.CollectProcessInfoSelfWithChildren()...)
+	return err
 }
 
 func (lc *LocalCommand) Stop() error {
