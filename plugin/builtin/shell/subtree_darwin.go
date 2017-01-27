@@ -69,7 +69,7 @@ func cleanup(key string, log plugin.Logger) error {
 		var matchesTaskId bool
 		for _, id := range matchTask {
 			fmt.Println("id ", id)
-			if taskId == id {
+			if key == id[1] {
 				matchesTaskId = true
 				break
 			}
