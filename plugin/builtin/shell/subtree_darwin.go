@@ -51,7 +51,7 @@ func cleanup(key string, log plugin.Logger) error {
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
 		// Use the regexes to extract the fields look for our 'tracer' variables
-		matchTask := taskEnvRegex.FindAllStringSubmatch(line)
+		matchTask := taskEnvRegex.FindAllStringSubmatch(line, -1)
 		matchAgent := agentPidRegex.FindStringSubmatch(line)
 		if matchTask == nil || matchAgent == nil {
 			continue
