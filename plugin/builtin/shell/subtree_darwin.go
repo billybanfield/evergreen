@@ -15,7 +15,7 @@ import (
 
 // These regexes are used to parse the output of 'ps' in order to detect if any processes listed
 // are descendants of the agent process.
-var taskEnvRegex = regexp.MustCompile("^(\\d+)\\s+.*?EVR_TASK_ID=(\\S+).*")
+var taskEnvRegex = regexp.MustCompile("EVR_TASK_ID=(\\S+)")
 var agentPidRegex = regexp.MustCompile("^(\\d+)\\s+.*?EVR_AGENT_PID=(\\d+).*")
 
 func trackProcess(key string, pid int, log plugin.Logger) {
@@ -51,18 +51,31 @@ func cleanup(key string, log plugin.Logger) error {
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
 		// Use the regexes to extract the fields look for our 'tracer' variables
-		matchTask := taskEnvRegex.FindStringSubmatch(line)
+		matchTask := taskEnvRegex.FindAllStringSubmatch(line)
 		matchAgent := agentPidRegex.FindStringSubmatch(line)
 		if matchTask == nil || matchAgent == nil {
 			continue
 		}
-		pidStr := matchTask[1]
-		taskId := matchTask[2]
+		pidStr := matchAgent[1]
 		agentPid := matchAgent[2]
+		grip.Infof("task %v", matchTask)
 
 		// If the process is from a different task, agent process,
 		// or is the agent itself, leave it alone.
-		if pidStr == myPid || taskId != key || agentPid != myPid {
+		if pidStr == myPid || agentPid != myPid {
+			continue
+		}
+
+		var matchesTaskId bool
+		for _, id := range matchTask {
+			fmt.Println("id ", id)
+			if taskId == id {
+				matchesTaskId = true
+				break
+			}
+		}
+
+		if !matchesTaskId {
 			continue
 		}
 

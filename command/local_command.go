@@ -69,6 +69,7 @@ func (lc *LocalCommand) Start() error {
 		cmd.Dir = lc.WorkingDirectory
 	}
 	cmd.Env = lc.Environment
+	grip.Infof("%v", cmd.Env)
 	if cmd.Env == nil {
 		cmd.Env = os.Environ()
 	}
