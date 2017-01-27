@@ -52,14 +52,32 @@ func cleanup(key string, log plugin.Logger) error {
 		line = strings.TrimSpace(line)
 		// Use the regexes to extract the fields look for our 'tracer' variables
 		matchTask := taskEnvRegex.FindAllStringSubmatch(line, -1)
-		matchAgent := agentPidRegex.FindStringSubmatch(line)
+		matchAgent := agentPidRegex.FindAllStringSubmatch(line, -1)
 		if matchTask == nil || matchAgent == nil {
 			continue
 		}
-		pidStr := matchAgent[1]
-		agentPid := matchAgent[2]
+		procPidStr := matchAgent[1][0]
+
+		procAgentPid := matchAgent[2]
 		grip.Infof("task %v", matchTask)
 		grip.Infof("pid %v", pidStr)
+
+		if procPidStr == myPid {
+			continue
+		}
+
+		var agentPidOk bool
+		for _, agentPidMatch := range matchAgent {
+			procAgentPid := agentPidMatch[1]
+			if procAgentPid == myPid {
+				agentPidOk = true
+				break
+			}
+		}
+
+		if !agentPidOk {
+			continue
+		}
 
 		// If the process is from a different task, agent process,
 		// or is the agent itself, leave it alone.
