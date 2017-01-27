@@ -49,54 +49,20 @@ func cleanup(key string, log plugin.Logger) error {
 
 	// Look through the output of the "ps" command and find the processes we need to kill.
 	for _, line := range lines {
-		line = strings.TrimSpace(line)
-		// Use the regexes to extract the fields look for our 'tracer' variables
-		matchTask := taskEnvRegex.FindAllStringSubmatch(line, -1)
-		matchAgent := agentPidRegex.FindAllStringSubmatch(line, -1)
-		if matchTask == nil || matchAgent == nil {
-			continue
-		}
+		splitLine := strings.Fields(line)
+		pid := splitLine[0]
+		env := splitLine[2:]
+		pidMarker := fmt.Sprintf("EVR_AGENT_PID=%v", os.Getpid())
+		taskMarker := fmt.Sprintf("EVR_TASK_ID=%v", key)
 
-		procPidStr := matchAgent[0][1]
-
-		// This process is the currently running agent, don't kill
-		if procPidStr == myPid {
-			continue
-		}
-
-		var agentPidOk bool
-		for _, agentPidMatch := range matchAgent {
-			procAgentPid := agentPidMatch[2]
-			if procAgentPid == myPid {
-				agentPidOk = true
-				break
+		if pid != myPid && envHasMarkers(env, pidMarker, taskMarker) {
+			// add it to the list of processes to clean up
+			pidAsInt, err := strconv.Atoi(pidStr)
+			if err != nil {
+				continue
 			}
+			pidsToKill = append(pidsToKill, pidAsInt)
 		}
-
-		if !agentPidOk {
-			continue
-		}
-
-		var matchesTaskId bool
-		for _, id := range matchTask {
-			grip.Infof("ids: %v", id)
-			if key == id[1] {
-				matchesTaskId = true
-				break
-			}
-		}
-
-		if !matchesTaskId {
-			continue
-		}
-
-		// Otherwise add it to the list of processes to clean up
-		pidAsInt, err := strconv.Atoi(procPidStr)
-		if err != nil {
-			continue
-		}
-
-		pidsToKill = append(pidsToKill, pidAsInt)
 	}
 
 	// Iterate through the list of processes to kill that we just built, and actually kill them.
