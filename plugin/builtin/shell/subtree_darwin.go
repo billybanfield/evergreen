@@ -56,19 +56,17 @@ func cleanup(key string, log plugin.Logger) error {
 		if matchTask == nil || matchAgent == nil {
 			continue
 		}
-		procPidStr := matchAgent[1][0]
 
-		procAgentPid := matchAgent[2]
-		grip.Infof("task %v", matchTask)
-		grip.Infof("pid %v", pidStr)
+		procPidStr := matchAgent[0][1]
 
+		// This process is the currently running agent, don't kill
 		if procPidStr == myPid {
 			continue
 		}
 
 		var agentPidOk bool
 		for _, agentPidMatch := range matchAgent {
-			procAgentPid := agentPidMatch[1]
+			procAgentPid := agentPidMatch[2]
 			if procAgentPid == myPid {
 				agentPidOk = true
 				break
@@ -76,12 +74,6 @@ func cleanup(key string, log plugin.Logger) error {
 		}
 
 		if !agentPidOk {
-			continue
-		}
-
-		// If the process is from a different task, agent process,
-		// or is the agent itself, leave it alone.
-		if pidStr == myPid || agentPid != myPid {
 			continue
 		}
 
@@ -99,7 +91,7 @@ func cleanup(key string, log plugin.Logger) error {
 		}
 
 		// Otherwise add it to the list of processes to clean up
-		pidAsInt, err := strconv.Atoi(pidStr)
+		pidAsInt, err := strconv.Atoi(procPidStr)
 		if err != nil {
 			continue
 		}
