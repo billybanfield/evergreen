@@ -59,6 +59,7 @@ func cleanup(key string, log plugin.Logger) error {
 		pidStr := matchAgent[1]
 		agentPid := matchAgent[2]
 		grip.Infof("task %v", matchTask)
+		grip.Infof("pid %v", pidStr)
 
 		// If the process is from a different task, agent process,
 		// or is the agent itself, leave it alone.
@@ -68,7 +69,7 @@ func cleanup(key string, log plugin.Logger) error {
 
 		var matchesTaskId bool
 		for _, id := range matchTask {
-			fmt.Println("id ", id)
+			grip.Infof("ids: %v", id)
 			if key == id[1] {
 				matchesTaskId = true
 				break
