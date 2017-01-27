@@ -11,7 +11,6 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/tychoish/grip"
 	"github.com/tychoish/grip/message"
-	"github.com/tychoish/grip/slogger"
 )
 
 func TestSubtreeCleanup(t *testing.T) {
