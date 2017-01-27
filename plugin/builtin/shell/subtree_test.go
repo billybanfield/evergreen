@@ -28,6 +28,7 @@ func TestSubtreeCleanup(t *testing.T) {
 			Environment: env,
 		}
 		So(localCmd.Start(), ShouldBeNil)
+		grip.Infof("started process %d", localCmd.Cmd.Process.Pid)
 		grip.InfoMany(message.CollectProcessInfoSelfWithChildren()...)
 		trackProcess(id, localCmd.Cmd.Process.Pid, &plugintest.MockLogger{})
 

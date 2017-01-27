@@ -8,8 +8,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/tychoish/grip/slogger"
 	"github.com/evergreen-ci/evergreen/plugin"
+	"github.com/tychoish/grip"
+	"github.com/tychoish/grip/slogger"
 )
 
 // These regexes are used to parse the output of 'ps' in order to detect if any processes listed
@@ -33,6 +34,8 @@ func cleanup(key string, log plugin.Logger) error {
 		Each line of output has a format with the pid, command, and environment, e.g.:
 		1084 foo.sh PATH=/usr/bin/sbin TMPDIR=/tmp LOGNAME=xxx
 	*/
+
+	grip.Infof("Cleaning up process with key %v", key)
 
 	out, err := exec.Command("ps", "-E", "-e", "-o", "pid,command").CombinedOutput()
 	if err != nil {
@@ -74,12 +77,15 @@ func cleanup(key string, log plugin.Logger) error {
 
 	// Iterate through the list of processes to kill that we just built, and actually kill them.
 	for _, pid := range pidsToKill {
+		grip.Infof("Killing process with pid %v", pid)
 		p := os.Process{}
 		p.Pid = pid
 		err := p.Kill()
 		if err != nil {
+			grip.Infof("error killing process %v", err)
 			log.LogSystem(slogger.ERROR, "Cleanup got error killing pid %v: %v", pid, err)
 		} else {
+			grip.Infof("successfully killed process with pid %v", pid)
 			log.LogSystem(slogger.INFO, "Cleanup killed pid %v", pid)
 		}
 	}

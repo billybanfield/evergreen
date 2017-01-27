@@ -6,8 +6,9 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/tychoish/grip/slogger"
 	"github.com/evergreen-ci/evergreen/plugin"
+	"github.com/tychoish/grip"
+	"github.com/tychoish/grip/slogger"
 )
 
 func trackProcess(key string, pid int, log plugin.Logger) {
@@ -38,6 +39,7 @@ func getEnv(pid int) ([]string, error) {
 }
 
 func cleanup(key string, log plugin.Logger) error {
+	grip.Infof("Cleaning up process with key %v", key)
 	pids, err := listProc()
 	if err != nil {
 		return err
