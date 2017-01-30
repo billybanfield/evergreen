@@ -50,6 +50,7 @@ func cleanup(key string, log plugin.Logger) error {
 	// Look through the output of the "ps" command and find the processes we need to kill.
 	for _, line := range lines {
 		splitLine := strings.Fields(line)
+		fmt.Println(splitLine)
 		pid := splitLine[0]
 		env := splitLine[2:]
 		pidMarker := fmt.Sprintf("EVR_AGENT_PID=%v", os.Getpid())
