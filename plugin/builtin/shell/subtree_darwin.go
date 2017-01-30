@@ -50,7 +50,6 @@ func cleanup(key string, log plugin.Logger) error {
 	// Look through the output of the "ps" command and find the processes we need to kill.
 	for _, line := range lines {
 		if len(line) == 0 {
-			fmt.Println("0 length")
 			continue
 		}
 		splitLine := strings.Fields(line)
