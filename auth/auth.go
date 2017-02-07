@@ -64,7 +64,15 @@ func IsSuperUser(settings evergreen.Settings, u User) bool {
 		len(settings.SuperUsers) == 0 {
 		return true
 	}
-
 	return false
 
+}
+
+// isAdmin returns false if the user is nil or if its id is not
+// located in ProjectRef's Admins field.
+func IsAdmin(u User, admins []string) bool {
+	if u == nil {
+		return false
+	}
+	return util.SliceContains(admins, u.UserName())
 }

@@ -5,6 +5,9 @@ package servicecontext
 // between the service and the API layers, allowing for changes in the
 // service architecture without forcing changes to the API.
 type ServiceContext struct {
+	Settings evergreen.Settings
+	RequestContext
+
 	TaskConnector
 }
 
