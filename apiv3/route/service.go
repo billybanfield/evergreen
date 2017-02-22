@@ -57,7 +57,7 @@ func (p *PlaceHolderRequestHandler) Validate() error {
 
 func (p *PlaceHolderRequestHandler) Execute(sc *servicecontext.ServiceContext) (model.Model, error) {
 	return nil, apiv3.APIError{
-		StatusCode: 404,
+		StatusCode: 200,
 		Message:    "this is a placeholder for now",
 	}
 }
