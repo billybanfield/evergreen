@@ -26,6 +26,7 @@ type MethodHandler struct {
 type RequestHandler interface {
 	// New defines how to fetch a new version of this handler.
 	New() RequestHandler
+
 	// Parse defines how to retrieve the needed parameters from the HTTP request.
 	// All needed data should be retrieved during the parse function since
 	// other functions do not have access to the HTTP request.
