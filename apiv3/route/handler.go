@@ -24,8 +24,8 @@ type MethodHandler struct {
 // RequestHandler is an interface that defines how to process an HTTP request
 // against an API resource.
 type RequestHandler interface {
-	// New defines how to fetch a new version of this handler.
-	New() RequestHandler
+	// Handler defines how to fetch a new version of this handler.
+	Handler() RequestHandler
 
 	// Parse defines how to retrieve the needed parameters from the HTTP request.
 	// All needed data should be retrieved during the parse function since

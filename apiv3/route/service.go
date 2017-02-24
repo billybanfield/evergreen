@@ -43,7 +43,7 @@ func getHandler(r *mux.Router, sc servicecontext.ServiceContext) http.Handler {
 type PlaceHolderRequestHandler struct {
 }
 
-func (p *PlaceHolderRequestHandler) New() RequestHandler {
+func (p *PlaceHolderRequestHandler) Handler() RequestHandler {
 	return &PlaceHolderRequestHandler{}
 }
 
