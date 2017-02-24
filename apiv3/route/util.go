@@ -1,5 +1,6 @@
-/*
 package route
+
+/*
 
 import (
 	"github.com/evergreen-ci/evergreen/model/user"

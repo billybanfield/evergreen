@@ -74,5 +74,5 @@ func IsAdmin(u User, admins []string) bool {
 	if u == nil {
 		return false
 	}
-	return util.SliceContains(admins, u.UserName())
+	return util.SliceContains(admins, u.Username())
 }

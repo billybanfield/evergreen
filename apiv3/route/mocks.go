@@ -41,6 +41,6 @@ type mockAuthenticator struct {
 }
 
 // Authenticate returns the error embeded in the mock authenticator.
-func (m *mockAuthenticator) Authenticate(r *http.Request) error {
+func (m *mockAuthenticator) Authenticate(r *http.Request, sc *servicecontext.ServiceContext) error {
 	return m.err
 }

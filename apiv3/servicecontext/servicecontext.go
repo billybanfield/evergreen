@@ -1,14 +1,19 @@
 package servicecontext
 
+import (
+	"github.com/evergreen-ci/evergreen"
+)
+
 // ServiceContext is a struct that contains all of the methods which
 // connect to the service layer of evergreen. These methods abstract the link
 // between the service and the API layers, allowing for changes in the
 // service architecture without forcing changes to the API.
 type ServiceContext struct {
 	Settings evergreen.Settings
-	RequestContext
 
 	TaskConnector
+	UserConnector
+	//	ContextConnector
 }
 
 // NewServiceContext returns a ServiceContext with interface implementations
@@ -16,6 +21,8 @@ type ServiceContext struct {
 func NewServiceContext() ServiceContext {
 	return ServiceContext{
 		TaskConnector: &DBTaskConnector{},
+		UserConnector: &DBUserConnector{},
+		//		ContextConnector: &DBContextConnector{},
 	}
 }
 
@@ -24,6 +31,8 @@ func NewServiceContext() ServiceContext {
 func NewMockServiceContext() ServiceContext {
 	return ServiceContext{
 		TaskConnector: &MockTaskConnector{},
+		UserConnector: &MockUserConnector{},
+		//		ContextConnector: &MockContextConnector{},
 	}
 
 }

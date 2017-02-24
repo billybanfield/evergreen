@@ -50,7 +50,7 @@ func makeHandler(methodHandler MethodHandler, sc servicecontext.ServiceContext) 
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
 		var err error
-		err = methodHandler.Authenticate(r)
+		err = methodHandler.Authenticate(r, &sc)
 		if err != nil {
 			handleAPIError(err, w)
 			return

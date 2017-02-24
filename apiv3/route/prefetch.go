@@ -1,10 +1,14 @@
 package route
 
 import (
-	"fmt"
-	"github.com/evergreen/model"
-	"github.com/evergreen/model/user"
-	"github.com/gorilla/mux"
+	"net/http"
+
+	"github.com/evergreen-ci/evergreen/apiv3"
+	"github.com/evergreen-ci/evergreen/apiv3/servicecontext"
+	//	"github.com/evergreen-ci/evergreen/model"
+	"github.com/evergreen-ci/evergreen/model/user"
+	"github.com/gorilla/context"
+	//	"github.com/gorilla/mux"
 )
 
 type (
@@ -51,8 +55,10 @@ func PrefetchUser(r *http.Request, sc servicecontext.ServiceContext) error {
 			context.Set(r, RequestUser, dbUser)
 		}
 	}
+	return nil
 }
 
+/*
 func PrefetchProject(r *http.Request, sc servicecontext.ServiceContext) error {
 	vars := mux.Vars(r)
 	taskId := vars["task_id"]
@@ -62,11 +68,11 @@ func PrefetchProject(r *http.Request, sc servicecontext.ServiceContext) error {
 	projectId := vars["project_id"]
 	ctx, err := model.LoadContext(taskId, buildId, versionId, patchId, projectId)
 	if err != nil {
-		// Some database lookup failed when fetching the data - log it
 		return err
 	}
 
 	if ctx.ProjectRef != nil && ctx.ProjectRef.Private && GetUser(r) == nil {
+		// Project is private and user is not authorized so return not found
 		return apiv3.APIError{
 			StatusCode: http.StatusNotFound,
 			Message:    "Project Not Found",
@@ -74,8 +80,18 @@ func PrefetchProject(r *http.Request, sc servicecontext.ServiceContext) error {
 	}
 
 	if ctx.Patch != nil && GetUser(r) == nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return apiv3.APIError{
+			StatusCode: http.StatusNotFound,
+			Message:    "Not Found",
+		}
 	}
-
 	context.Set(r, RequestContext, &ctx)
+}
+
+*/
+func GetUser(r *http.Request) *user.DBUser {
+	if rv := context.Get(r, RequestUser); rv != nil {
+		return rv.(*user.DBUser)
+	}
+	return nil
 }

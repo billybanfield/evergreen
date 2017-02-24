@@ -3,6 +3,7 @@ package route
 import (
 	"net/http"
 
+	"github.com/evergreen-ci/evergreen/apiv3"
 	"github.com/evergreen-ci/evergreen/apiv3/servicecontext"
 	"github.com/evergreen-ci/evergreen/auth"
 	"github.com/evergreen-ci/evergreen/service"
@@ -46,11 +47,13 @@ func (s *SuperUserAuthenticator) Authenticate(r *http.Request,
 	}
 }
 
-// ProjectOwnerAuthenticator only allows
+// ProjectOwnerAuthenticator only allows the owner of the project and
+// superusers access to the information. It requires that the project be
+// available and that the user also be set.
 type ProjectAdminAuthenticator struct{}
 
 // ProjectAdminAuthenticator checks that the user is either a super user or is
-// part of the project context's project's admins.
+// part of the project context's project admins.
 func (p *ProjectAdminAuthenticator) Authenticate(r *http.Request,
 	sc *servicecontext.ServiceContext) error {
 	projCtx := service.MustHaveProjectContext(r)

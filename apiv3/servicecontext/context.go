@@ -1,5 +1,7 @@
 package servicecontext
 
+/*
+
 import (
 	"github.com/evergreen-ci/evergreen/model/user"
 
@@ -80,3 +82,4 @@ func UserMiddleware(um auth.UserManager) func(rw http.ResponseWriter, r *http.Re
 		next(rw, r)
 	}
 }
+*/
