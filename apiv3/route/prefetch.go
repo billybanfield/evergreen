@@ -1,14 +1,15 @@
 package route
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/evergreen-ci/evergreen/apiv3"
 	"github.com/evergreen-ci/evergreen/apiv3/servicecontext"
-	//	"github.com/evergreen-ci/evergreen/model"
+	"github.com/evergreen-ci/evergreen/model"
 	"github.com/evergreen-ci/evergreen/model/user"
 	"github.com/gorilla/context"
-	//	"github.com/gorilla/mux"
+	"github.com/gorilla/mux"
 )
 
 type (
@@ -58,15 +59,14 @@ func PrefetchUser(r *http.Request, sc servicecontext.ServiceContext) error {
 	return nil
 }
 
-/*
-func PrefetchProject(r *http.Request, sc servicecontext.ServiceContext) error {
+func PrefetchProjectContext(r *http.Request, sc servicecontext.ServiceContext) error {
 	vars := mux.Vars(r)
 	taskId := vars["task_id"]
 	buildId := vars["build_id"]
 	versionId := vars["version_id"]
 	patchId := vars["patch_id"]
 	projectId := vars["project_id"]
-	ctx, err := model.LoadContext(taskId, buildId, versionId, patchId, projectId)
+	ctx, err := sc.FetchContext(taskId, buildId, versionId, patchId, projectId)
 	if err != nil {
 		return err
 	}
@@ -86,12 +86,27 @@ func PrefetchProject(r *http.Request, sc servicecontext.ServiceContext) error {
 		}
 	}
 	context.Set(r, RequestContext, &ctx)
+	return nil
 }
 
-*/
 func GetUser(r *http.Request) *user.DBUser {
 	if rv := context.Get(r, RequestUser); rv != nil {
 		return rv.(*user.DBUser)
 	}
 	return nil
+}
+
+func GetProjectContext(r *http.Request) (*model.Context, error) {
+	if rv := context.Get(r, RequestContext); rv != nil {
+		return rv.(*model.Context), nil
+	}
+	return &model.Context{}, fmt.Errorf("No context loaded")
+}
+
+func MustHaveProjectContext(r *http.Request) *model.Context {
+	pc, err := GetProjectContext(r)
+	if err != nil {
+		panic(err)
+	}
+	return pc
 }

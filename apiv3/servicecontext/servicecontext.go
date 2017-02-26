@@ -13,16 +13,16 @@ type ServiceContext struct {
 
 	TaskConnector
 	UserConnector
-	//	ContextConnector
+	ContextConnector
 }
 
 // NewServiceContext returns a ServiceContext with interface implementations
 // that connect directly to the underlying service layer.
 func NewServiceContext() ServiceContext {
 	return ServiceContext{
-		TaskConnector: &DBTaskConnector{},
-		UserConnector: &DBUserConnector{},
-		//		ContextConnector: &DBContextConnector{},
+		TaskConnector:    &DBTaskConnector{},
+		UserConnector:    &DBUserConnector{},
+		ContextConnector: &DBContextConnector{},
 	}
 }
 
@@ -30,9 +30,9 @@ func NewServiceContext() ServiceContext {
 // that mock connecting to the service layer.
 func NewMockServiceContext() ServiceContext {
 	return ServiceContext{
-		TaskConnector: &MockTaskConnector{},
-		UserConnector: &MockUserConnector{},
-		//		ContextConnector: &MockContextConnector{},
+		TaskConnector:    &MockTaskConnector{},
+		UserConnector:    &MockUserConnector{},
+		ContextConnector: &MockContextConnector{},
 	}
 
 }

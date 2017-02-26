@@ -6,7 +6,6 @@ import (
 	"github.com/evergreen-ci/evergreen/apiv3"
 	"github.com/evergreen-ci/evergreen/apiv3/servicecontext"
 	"github.com/evergreen-ci/evergreen/auth"
-	"github.com/evergreen-ci/evergreen/service"
 )
 
 // Authenticator is an interface which defines how requests can authenticate
@@ -36,14 +35,14 @@ type SuperUserAuthenticator struct{}
 // 'NotFound' errors to prevent leaking sensitive information.
 func (s *SuperUserAuthenticator) Authenticate(r *http.Request,
 	sc *servicecontext.ServiceContext) error {
-	u := service.GetUser(r)
+	u := GetUser(r)
 
 	if auth.IsSuperUser(sc.Settings, u) {
 		return nil
 	}
 	return apiv3.APIError{
 		StatusCode: http.StatusNotFound,
-		Message:    "Not found",
+		Message:    "Not Found",
 	}
 }
 
@@ -56,16 +55,16 @@ type ProjectAdminAuthenticator struct{}
 // part of the project context's project admins.
 func (p *ProjectAdminAuthenticator) Authenticate(r *http.Request,
 	sc *servicecontext.ServiceContext) error {
-	projCtx := service.MustHaveProjectContext(r)
-	dbUser := service.GetUser(r)
+	projCtx := MustHaveProjectContext(r)
+	dbUser := GetUser(r)
 
+	// If either a superuser or admin, request is allowed to proceed.
 	if auth.IsSuperUser(sc.Settings, dbUser) || auth.IsAdmin(dbUser, projCtx.ProjectRef.Admins) {
 		return nil
 	}
 
 	return apiv3.APIError{
 		StatusCode: http.StatusNotFound,
-		Message:    "Not found",
+		Message:    "Not Found",
 	}
-
 }
