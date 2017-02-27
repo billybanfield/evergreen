@@ -10,7 +10,7 @@ import (
 // Route defines all of the functioning of a particular API route. It contains
 // implementations of the various API methods that are defined on this endpoint.
 type RouteManager struct {
-	// methods is a slice containing all of the http methods (PUT, GET, DELETE, etc.)
+	// Methods is a slice containing all of the http methods (PUT, GET, DELETE, etc.)
 	// for this route.
 	Methods []MethodHandler
 
