@@ -19,8 +19,7 @@ func TestAdminAuthenticator(t *testing.T) {
 		req, err := http.NewRequest(evergreen.MethodGet, "/", nil)
 		So(err, ShouldBeNil)
 		projectRef := model.ProjectRef{}
-		serviceContext := servicecontext.NewMockServiceContext()
-		settings := evergreen.Settings{}
+		serviceContext := servicecontext.NewMockServiceContext([]string{})
 		auther := ProjectAdminAuthenticator{}
 		Convey("When authenticating", func() {
 
@@ -39,7 +38,7 @@ func TestAdminAuthenticator(t *testing.T) {
 				}
 				context.Set(req, RequestUser, &u)
 				context.Set(req, RequestContext, &ctx)
-				So(auther.Authenticate(req, &serviceContext), ShouldBeNil)
+				So(auther.Authenticate(&serviceContext, req), ShouldBeNil)
 			})
 			Convey("if user is in the super users, should succeed", func() {
 				superUsers := []string{"test_user"}
@@ -47,20 +46,18 @@ func TestAdminAuthenticator(t *testing.T) {
 				ctx := model.Context{
 					ProjectRef: &projectRef,
 				}
-				settings.SuperUsers = superUsers
-				serviceContext.Settings = settings
+				serviceContext.SuperUsers = superUsers
 
 				u := user.DBUser{
 					Id: "test_user",
 				}
 				context.Set(req, RequestUser, &u)
 				context.Set(req, RequestContext, &ctx)
-				So(auther.Authenticate(req, &serviceContext), ShouldBeNil)
+				So(auther.Authenticate(&serviceContext, req), ShouldBeNil)
 			})
 			Convey("if user is not in the admin and not a super user, should error", func() {
 				superUsers := []string{"other_user"}
-				settings.SuperUsers = superUsers
-				serviceContext.Settings = settings
+				serviceContext.SuperUsers = superUsers
 
 				projectRef.Admins = []string{"other_user"}
 				ctx := model.Context{
@@ -72,7 +69,7 @@ func TestAdminAuthenticator(t *testing.T) {
 				}
 				context.Set(req, RequestUser, &u)
 				context.Set(req, RequestContext, &ctx)
-				err := auther.Authenticate(req, &serviceContext)
+				err := auther.Authenticate(&serviceContext, req)
 
 				errToResemble := apiv3.APIError{
 					StatusCode: http.StatusNotFound,
@@ -86,11 +83,10 @@ func TestAdminAuthenticator(t *testing.T) {
 }
 func TestSuperUserAuthenticator(t *testing.T) {
 	Convey("When there is an http request, "+
-		"an evergreen settings, authenticator, and a service context", t, func() {
+		"an authenticator, and a service context", t, func() {
 		req, err := http.NewRequest(evergreen.MethodGet, "/", nil)
 		So(err, ShouldBeNil)
-		settings := evergreen.Settings{}
-		serviceContext := servicecontext.NewMockServiceContext()
+		serviceContext := servicecontext.NewMockServiceContext([]string{})
 		auther := SuperUserAuthenticator{}
 		Convey("When authenticating", func() {
 
@@ -100,25 +96,23 @@ func TestSuperUserAuthenticator(t *testing.T) {
 
 			Convey("if user is in the superusers, should succeed", func() {
 				superUsers := []string{"test_user"}
-				settings.SuperUsers = superUsers
-				serviceContext.Settings = settings
+				serviceContext.SuperUsers = superUsers
 
 				u := user.DBUser{
 					Id: "test_user",
 				}
 				context.Set(req, RequestUser, &u)
-				So(auther.Authenticate(req, &serviceContext), ShouldBeNil)
+				So(auther.Authenticate(&serviceContext, req), ShouldBeNil)
 			})
 			Convey("if user is not in the superusers, should error", func() {
 				superUsers := []string{"other_user"}
-				settings.SuperUsers = superUsers
-				serviceContext.Settings = settings
+				serviceContext.SuperUsers = superUsers
 
 				u := user.DBUser{
 					Id: "test_user",
 				}
 				context.Set(req, RequestUser, &u)
-				err := auther.Authenticate(req, &serviceContext)
+				err := auther.Authenticate(&serviceContext, req)
 
 				errToResemble := apiv3.APIError{
 					StatusCode: http.StatusNotFound,

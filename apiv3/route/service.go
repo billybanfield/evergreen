@@ -13,8 +13,8 @@ import (
 // AttachHandler attaches the api's request handlers to the given mux router.
 // It builds a ServiceContext then attaches each of the main functions for
 // the api to the router.
-func AttachHandler(root *mux.Router) http.Handler {
-	sc := servicecontext.NewServiceContext()
+func AttachHandler(root *mux.Router, settings *evergreen.Settings) http.Handler {
+	sc := servicecontext.NewServiceContext(settings.SuperUsers)
 
 	return getHandler(root, sc)
 }

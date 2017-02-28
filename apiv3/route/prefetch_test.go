@@ -17,7 +17,7 @@ import (
 
 func TestPrefetchUser(t *testing.T) {
 	Convey("When there are users to fetch and a request", t, func() {
-		serviceContext := servicecontext.NewMockServiceContext()
+		serviceContext := servicecontext.NewMockServiceContext([]string{})
 		users := map[string]*user.DBUser{}
 		numUsers := 10
 		for i := 0; i < numUsers; i++ {
@@ -99,7 +99,7 @@ func TestPrefetchUser(t *testing.T) {
 
 func TestPrefetchProject(t *testing.T) {
 	Convey("When there is a servicecontext and a request", t, func() {
-		serviceContext := servicecontext.NewMockServiceContext()
+		serviceContext := servicecontext.NewMockServiceContext([]string{})
 		req, err := http.NewRequest(evergreen.MethodGet, "/", nil)
 		So(err, ShouldBeNil)
 		Convey("When fetching the project context", func() {

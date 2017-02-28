@@ -1,6 +1,7 @@
 package servicecontext
 
 import (
+	"github.com/evergreen-ci/evergreen/auth"
 	"github.com/evergreen-ci/evergreen/model/user"
 )
 
@@ -9,7 +10,7 @@ import (
 type UserConnector interface {
 
 	// FindUserById is a method to find a specific user given its ID.
-	FindUserById(string) (*user.DBUser, error)
+	FindUserById(string) (auth.User, error)
 }
 
 // DBUserConnector is a struct that implements the UserConnector interface
@@ -18,7 +19,7 @@ type DBUserConnector struct{}
 
 // FindUserById uses the service layer's user type to query the backing database for
 // the user with the given Id.
-func (tc *DBUserConnector) FindUserById(userId string) (*user.DBUser, error) {
+func (tc *DBUserConnector) FindUserById(userId string) (auth.User, error) {
 	t, err := user.FindOne(user.ById(userId))
 	if err != nil {
 		return nil, err
@@ -35,7 +36,7 @@ type MockUserConnector struct {
 // FindUserById provides a mock implementation of a UserConnector that does not
 // need to use a database. It returns results based on the cached users
 // in the MockUserConnector.
-func (muc *MockUserConnector) FindUserById(userId string) (*user.DBUser, error) {
+func (muc *MockUserConnector) FindUserById(userId string) (auth.User, error) {
 	u := muc.CachedUsers[userId]
 	return u, nil
 }

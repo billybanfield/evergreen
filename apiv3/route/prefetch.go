@@ -25,10 +25,13 @@ const (
 	RequestContext requestContextKey = 0
 )
 
-type PrefetchFunc func(r *http.Request, sc servicecontext.ServiceContext) error
+// PrefetchFunc is a function signature that defines types of functions which may
+// be used to fetch data before the main request handler is called. They should
+// fetch data using the ServiceeContext and set them on the request context.
+type PrefetchFunc func(*http.Request, servicecontext.ServiceContext) error
 
-// UserMiddleware is middleware which checks for session tokens on the Request
-// and looks up and attaches a user for that token if one is found.
+// PrefetchUser gets the user information from a request, and uses it to
+// get the associated user from the database and attaches it to the request context.
 func PrefetchUser(r *http.Request, sc servicecontext.ServiceContext) error {
 	// Grab API auth details from header
 	var authDataAPIKey, authDataName string
@@ -59,6 +62,8 @@ func PrefetchUser(r *http.Request, sc servicecontext.ServiceContext) error {
 	return nil
 }
 
+// PrefetchProjectContext gets the information related to the project that the request contains
+// and fetches the associated project context and attaches that to the request context.
 func PrefetchProjectContext(r *http.Request, sc servicecontext.ServiceContext) error {
 	vars := mux.Vars(r)
 	taskId := vars["task_id"]
