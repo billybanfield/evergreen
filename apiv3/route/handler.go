@@ -42,7 +42,7 @@ type RequestHandler interface {
 
 	// Execute performs the necessary work on the evergreen backend and returns
 	// an API model to be surfaced to the user.
-	Execute(*servicecontext.ServiceContext) (model.Model, error)
+	Execute(servicecontext.ServiceContext) (model.Model, error)
 }
 
 // makeHandler makes an http.HandlerFunc that wraps calls to each of the api
@@ -53,7 +53,7 @@ func makeHandler(methodHandler MethodHandler, sc servicecontext.ServiceContext) 
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", JsonMimeType)
 
-		if err := methodHandler.Authenticate(&sc, r); err != nil {
+		if err := methodHandler.Authenticate(sc, r); err != nil {
 			handleAPIError(err, w)
 			return
 		}
@@ -68,7 +68,7 @@ func makeHandler(methodHandler MethodHandler, sc servicecontext.ServiceContext) 
 			handleAPIError(err, w)
 			return
 		}
-		result, err := reqHandler.Execute(&sc)
+		result, err := reqHandler.Execute(sc)
 		if err != nil {
 			handleAPIError(err, w)
 			return

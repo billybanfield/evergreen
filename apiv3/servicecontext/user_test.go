@@ -14,7 +14,7 @@ func TestFindUserById(t *testing.T) {
 	testutil.ConfigureIntegrationTest(t, testConfig, "TestFindUserById")
 	db.SetGlobalSessionProvider(db.SessionFactoryFromConfig(testConfig))
 
-	serviceContext := NewServiceContext()
+	serviceContext := &DBServiceContext{}
 	numUsers := 10
 
 	Convey("When there are user documents in the database", t, func() {
@@ -32,7 +32,7 @@ func TestFindUserById(t *testing.T) {
 			for i := 0; i < numUsers; i++ {
 				found, err := serviceContext.FindUserById(fmt.Sprintf("user_%d", i))
 				So(err, ShouldBeNil)
-				So(found.APIKey, ShouldEqual, fmt.Sprintf("apikey_%d", i))
+				So(found.GetAPIKey(), ShouldEqual, fmt.Sprintf("apikey_%d", i))
 			}
 		})
 		Convey("then searching for user that doesn't exist should return nil",

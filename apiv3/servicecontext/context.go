@@ -4,16 +4,9 @@ import (
 	"github.com/evergreen-ci/evergreen/model"
 )
 
-// ContextConnector is an interface which abstracts the service layer's fetching
-// of a project context.
-type ContextConnector interface {
-
-	// FetchContext is a method to fetch a context given a series of identifiers.
-	FetchContext(string, string, string, string, string) (model.Context, error)
-}
-
-// DBContextConnector is a struct that implements the ContextConnector interface
-// through interactions with the backing database.
+// DBContextConnector is a struct that implements the Context related
+// functions of the ServiceConnector interface through interactions
+// with the backing database.
 type DBContextConnector struct{}
 
 // LoadContext fetches the context through a call to the service layer.
@@ -21,7 +14,7 @@ func (dc *DBContextConnector) FetchContext(taskId, buildId, versionId, patchId, 
 	return model.LoadContext(taskId, buildId, versionId, patchId, projectId)
 }
 
-// MockContextConnector is a struct that implements the ContextConnector interface
+// MockContextConnector is a struct that mocks the context methods
 // by storing context to be fetched by its method.
 type MockContextConnector struct {
 	CachedContext model.Context

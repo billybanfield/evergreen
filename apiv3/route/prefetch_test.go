@@ -17,7 +17,7 @@ import (
 
 func TestPrefetchUser(t *testing.T) {
 	Convey("When there are users to fetch and a request", t, func() {
-		serviceContext := servicecontext.NewMockServiceContext([]string{})
+		serviceContext := &servicecontext.MockServiceContext{}
 		users := map[string]*user.DBUser{}
 		numUsers := 10
 		for i := 0; i < numUsers; i++ {
@@ -28,7 +28,7 @@ func TestPrefetchUser(t *testing.T) {
 				APIKey: apiKey,
 			}
 		}
-		serviceContext.UserConnector = &servicecontext.MockUserConnector{users}
+		serviceContext.MockUserConnector.CachedUsers = users
 		req, err := http.NewRequest(evergreen.MethodGet, "/", nil)
 		So(err, ShouldBeNil)
 		Convey("When examining users", func() {
@@ -99,7 +99,7 @@ func TestPrefetchUser(t *testing.T) {
 
 func TestPrefetchProject(t *testing.T) {
 	Convey("When there is a servicecontext and a request", t, func() {
-		serviceContext := servicecontext.NewMockServiceContext([]string{})
+		serviceContext := &servicecontext.MockServiceContext{}
 		req, err := http.NewRequest(evergreen.MethodGet, "/", nil)
 		So(err, ShouldBeNil)
 		Convey("When fetching the project context", func() {
@@ -111,9 +111,7 @@ func TestPrefetchProject(t *testing.T) {
 				ctx.ProjectRef = &model.ProjectRef{
 					Private: true,
 				}
-				serviceContext.ContextConnector = &servicecontext.MockContextConnector{
-					CachedContext: ctx,
-				}
+				serviceContext.MockContextConnector.CachedContext = ctx
 				err := PrefetchProjectContext(req, serviceContext)
 				So(context.Get(req, RequestContext), ShouldBeNil)
 
@@ -126,9 +124,7 @@ func TestPrefetchProject(t *testing.T) {
 			Convey("should error if patch exists and no user is set", func() {
 				ctx := model.Context{}
 				ctx.Patch = &patch.Patch{}
-				serviceContext.ContextConnector = &servicecontext.MockContextConnector{
-					CachedContext: ctx,
-				}
+				serviceContext.MockContextConnector.CachedContext = ctx
 				err := PrefetchProjectContext(req, serviceContext)
 				So(context.Get(req, RequestContext), ShouldBeNil)
 
@@ -144,9 +140,7 @@ func TestPrefetchProject(t *testing.T) {
 					Private: true,
 				}
 				context.Set(req, RequestUser, &user.DBUser{Id: "test_user"})
-				serviceContext.ContextConnector = &servicecontext.MockContextConnector{
-					CachedContext: ctx,
-				}
+				serviceContext.MockContextConnector.CachedContext = ctx
 				err := PrefetchProjectContext(req, serviceContext)
 				So(err, ShouldBeNil)
 

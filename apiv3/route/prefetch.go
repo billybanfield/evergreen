@@ -47,16 +47,16 @@ func PrefetchUser(r *http.Request, sc servicecontext.ServiceContext) error {
 	}
 
 	if len(authDataAPIKey) > 0 {
-		dbUser, err := sc.FindUserById((authDataName))
-		if dbUser != nil && err == nil {
+		apiUser, err := sc.FindUserById((authDataName))
+		if apiUser != nil && err == nil {
 
-			if dbUser.APIKey != authDataAPIKey {
+			if apiUser.GetAPIKey() != authDataAPIKey {
 				return apiv3.APIError{
 					StatusCode: http.StatusUnauthorized,
 					Message:    "Invalid API key",
 				}
 			}
-			context.Set(r, RequestUser, dbUser)
+			context.Set(r, RequestUser, apiUser)
 		}
 	}
 	return nil
