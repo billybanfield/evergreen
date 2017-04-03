@@ -295,6 +295,14 @@ $(buildDir)/output.%.coverage.html:$(buildDir)/output.%.coverage
 	$(vendorGopath) go tool cover -html=$< -o $@
 # end test and coverage artifacts
 
+# start special case for running windows subtree test
+$(buildDir)/output.plugin-builtin-shell.test:$(buildDir)/test.plugin-builtin-shell .FORCE
+ifeq ($(OS),Windows_NT)
+	$(testRunEnv) psexec ./$< $(testArgs) 2>&1 | tee $@ 
+else
+	$(testRunEnv) ./$< $(testArgs) 2>&1 | tee $@ 
+endif
+# end special case for running windows subtree test
 
 # clean and other utility targets
 clean:
