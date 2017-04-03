@@ -108,12 +108,14 @@ func trackProcess(taskId string, pid int, log plugin.Logger) error {
 // given task key, and if it exists, terminates it. This will guarantee that any shell processes
 // started throughout the task run are destroyed, as long as they were captured in trackProcess.
 func cleanup(key string, log plugin.Logger) error {
-	grip.Alert(fmt.Sprintf("%s", key))
+	jobsMutex.Lock()
+	grip.Alert(fmt.Sprintf("cleaning up: %s", key))
 	defer jobsMutex.Unlock()
 	job, hasKey := jobsMapping[key]
 	if !hasKey {
 		return nil
 	}
+	grip.Alert(fmt.Sprintf("terminating job: %#v", job))
 
 	err := job.Terminate(0)
 	if err != nil {
@@ -218,6 +220,7 @@ func AssignProcessToJobObject(job syscall.Handle, process syscall.Handle) error 
 
 func TerminateJobObject(job syscall.Handle, exitCode uint32) error {
 	r1, _, e1 := procTerminateJobObject.Call(uintptr(job), uintptr(exitCode))
+	grep.Alert(fmt.Sprint("terminated received %v, %v", r1, e1))
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			return e1

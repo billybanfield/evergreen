@@ -37,6 +37,9 @@ func TestSubtreeCleanup(t *testing.T) {
 
 		Convey("running KillSpawnedProcs should kill the process before it finishes", func() {
 			So(KillSpawnedProcs(id, &plugintest.MockLogger{}), ShouldBeNil)
+			grip.Alert(int32(localCmd.Cmd.Process.Pid))
+			grip.Alert(message.CollectProcessInfoWithChildren(int32(localCmd.Cmd.Process.Pid)))
+			grip.AlertMany(message.CollectProcessInfoSelfWithChildren()...)
 			So(localCmd.Cmd.Wait(), ShouldNotBeNil)
 			So(buf.String(), ShouldNotContainSubstring, "finish")
 		})
