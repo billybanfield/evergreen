@@ -220,14 +220,17 @@ func AssignProcessToJobObject(job syscall.Handle, process syscall.Handle) error 
 
 func TerminateJobObject(job syscall.Handle, exitCode uint32) error {
 	r1, _, e1 := procTerminateJobObject.Call(uintptr(job), uintptr(exitCode))
-	grep.Alert(fmt.Sprint("terminated received %v, %v", r1, e1))
+	grip.Alert(fmt.Sprint("terminated received %v, %v", r1, e1))
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
+			grip.Alert("error success")
 			return e1
 		} else {
+			grip.Alert("error EINVAL")
 			return syscall.EINVAL
 		}
 	}
+	grip.Alert("no error")
 	return nil
 }
 
