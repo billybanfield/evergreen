@@ -8,6 +8,8 @@ import (
 
 	"github.com/evergreen-ci/evergreen/command"
 	"github.com/evergreen-ci/evergreen/plugin/plugintest"
+	"github.com/mongodb/grip"
+	"github.com/mongodb/grip/message"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -21,7 +23,7 @@ func TestSubtreeCleanup(t *testing.T) {
 		env = append(env, fmt.Sprintf("EVR_TASK_ID=%v", id))
 		env = append(env, fmt.Sprintf("EVR_AGENT_PID=%v", os.Getpid()))
 		localCmd := &command.LocalCommand{
-			CmdString:   "(while true; do sleep 1; done; echo 'finish')",
+			CmdString:   "while true; do sleep 1; done; echo 'finish'",
 			Stdout:      buf,
 			Stderr:      buf,
 			ScriptMode:  true,
@@ -29,6 +31,9 @@ func TestSubtreeCleanup(t *testing.T) {
 		}
 		So(localCmd.Start(), ShouldBeNil)
 		trackProcess(id, localCmd.Cmd.Process.Pid, &plugintest.MockLogger{})
+		grip.Alert(int32(localCmd.Cmd.Process.Pid))
+		grip.Alert(message.CollectProcessInfoWithChildren(int32(localCmd.Cmd.Process.Pid)))
+		grip.AlertMany(message.CollectProcessInfoSelfWithChildren()...)
 
 		Convey("running KillSpawnedProcs should kill the process before it finishes", func() {
 			So(KillSpawnedProcs(id, &plugintest.MockLogger{}), ShouldBeNil)

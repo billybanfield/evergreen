@@ -7,6 +7,7 @@ import (
 	"unsafe"
 
 	"github.com/evergreen-ci/evergreen/plugin"
+	"github.com/mongodb/grip"
 	"github.com/mongodb/grip/slogger"
 )
 
@@ -76,6 +77,7 @@ var (
 // once. If a job object doesn't already exist, it will create one automatically, scoped by the
 // task ID for which the shell process was started.
 func trackProcess(taskId string, pid int, log plugin.Logger) error {
+	grip.Alert(fmt.Sprintf("tracking process %s", pid))
 	jobsMutex.Lock()
 	defer jobsMutex.Unlock()
 	var job *Job
@@ -84,6 +86,7 @@ func trackProcess(taskId string, pid int, log plugin.Logger) error {
 	if jobObj, hasKey := jobsMapping[taskId]; hasKey {
 		job = jobObj
 	} else {
+		grip.Alert("job created")
 		log.LogSystem(slogger.INFO, "tracking process with pid %v", pid)
 		// Job object does not exist yet for this task, so we must create one
 		job, err = NewJob(taskId)
@@ -97,6 +100,7 @@ func trackProcess(taskId string, pid int, log plugin.Logger) error {
 	if err != nil {
 		log.LogSystem(slogger.ERROR, "failed assigning process %v to job object: %v", pid, err)
 	}
+	grip.Alert(fmt.Sprintf("%#v", jobsMapping))
 	return err
 }
 
@@ -104,7 +108,7 @@ func trackProcess(taskId string, pid int, log plugin.Logger) error {
 // given task key, and if it exists, terminates it. This will guarantee that any shell processes
 // started throughout the task run are destroyed, as long as they were captured in trackProcess.
 func cleanup(key string, log plugin.Logger) error {
-	jobsMutex.Lock()
+	grip.Alert(fmt.Sprintf("%s", key))
 	defer jobsMutex.Unlock()
 	job, hasKey := jobsMapping[key]
 	if !hasKey {
@@ -118,6 +122,7 @@ func cleanup(key string, log plugin.Logger) error {
 	}
 	delete(jobsMapping, key)
 	defer job.Close()
+	grip.Alert("terminated and deleted")
 	return nil
 }
 
