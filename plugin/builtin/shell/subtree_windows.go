@@ -77,7 +77,7 @@ var (
 // once. If a job object doesn't already exist, it will create one automatically, scoped by the
 // task ID for which the shell process was started.
 func trackProcess(taskId string, pid int, log plugin.Logger) error {
-	grip.Alert(fmt.Sprintf("tracking process %s", pid))
+	grip.Alert(fmt.Sprintf("tracking process %d", pid))
 	jobsMutex.Lock()
 	defer jobsMutex.Unlock()
 	var job *Job
@@ -86,7 +86,7 @@ func trackProcess(taskId string, pid int, log plugin.Logger) error {
 	if jobObj, hasKey := jobsMapping[taskId]; hasKey {
 		job = jobObj
 	} else {
-		grip.Alert("job created")
+		grip.Alert(fmt.Sprintf("job created with key %v", taskId))
 		log.LogSystem(slogger.INFO, "tracking process with pid %v", pid)
 		// Job object does not exist yet for this task, so we must create one
 		job, err = NewJob(taskId)
@@ -220,7 +220,7 @@ func AssignProcessToJobObject(job syscall.Handle, process syscall.Handle) error 
 
 func TerminateJobObject(job syscall.Handle, exitCode uint32) error {
 	r1, _, e1 := procTerminateJobObject.Call(uintptr(job), uintptr(exitCode))
-	grip.Alert(fmt.Sprint("terminated received %v, %v", r1, e1))
+	grip.Alert(fmt.Sprintf("terminated received %v, %v", r1, e1))
 	if r1 == 0 {
 		if e1 != ERROR_SUCCESS {
 			grip.Alert("error success")
