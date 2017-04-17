@@ -23,7 +23,7 @@ type TestMap map[string]APITest
 
 func (at *APITests) BuildFromService(st interface{}) error {
 	switch v := st.(type) {
-	case []test.TestResult:
+	case []task.TestResult:
 		m := make(map[string]APITest, len(v))
 		testMap := TestMap(m)
 		for _, t := range v {
@@ -35,7 +35,7 @@ func (at *APITests) BuildFromService(st interface{}) error {
 	case string:
 		at.TaskId = v
 	default:
-		return fmt.Errorf("Incorrect type when creating APITest")
+		return fmt.Errorf("Incorrect type when creating APITests")
 	}
 	return nil
 }
@@ -44,10 +44,33 @@ func (at *APITests) ToService() (interface{}, error) {
 	return nil, nil
 }
 
-func (at *APITests) BuildFromService(st interface{}) error {
+func (at *APITest) BuildFromService(st interface{}) error {
+	switch v := st.(type) {
+	case task.TestResult:
+		(*at) = APITest {
+			Status: APIString(v.Status),
+			TestFile: APIString(v.TestFile),
+			ExitCode: v.ExitCode,
+		}
+
+		startTime := time.Time(v.StartTime)
+		endTime := time.Time(v.EndTime)
+
+		at.StartTime = APITime(startTime)
+		at.EndTime = APITime(endTime)
+
+
+
+
+		}
+
+	default:
+		return fmt.Errorf("Incorrect type when creating APITest")
+	}
 	return nil
+
 }
 
-func (at *APITests) ToService() (interface{}, error) {
+func (at *APITest) ToService() (interface{}, error) {
 	return nil, nil
 }
