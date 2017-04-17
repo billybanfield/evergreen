@@ -38,6 +38,8 @@ type ServiceContext interface {
 	// It returns a list of tasks which match.
 	FindTasksByBuildId(string, string, int) ([]task.Task, error)
 
+	FindTestsBytaskId(string) error
+
 	// FindUserById is a method to find a specific user given its ID.
 	FindUserById(string) (auth.APIUser, error)
 
@@ -62,6 +64,7 @@ type DBServiceContext struct {
 	DBTaskConnector
 	DBContextConnector
 	DBHostConnector
+	DBTestConnector
 }
 
 func (ctx *DBServiceContext) GetSuperUsers() []string {
@@ -92,6 +95,7 @@ type MockServiceContext struct {
 	MockTaskConnector
 	MockContextConnector
 	MockHostConnector
+	MockTestConnector
 }
 
 func (ctx *MockServiceContext) GetSuperUsers() []string {
