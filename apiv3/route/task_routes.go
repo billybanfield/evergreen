@@ -18,6 +18,10 @@ import (
 	"github.com/pkg/errors"
 )
 
+const (
+	incorrectArgsTypeErrorMessge = "programmer error: incorrect type for paginator args"
+)
+
 func getTaskRestartRouteManager(route string, version int) *RouteManager {
 	trh := &TaskRestartHandler{}
 	taskRestart := MethodHandler{
@@ -30,6 +34,23 @@ func getTaskRestartRouteManager(route string, version int) *RouteManager {
 	taskRoute := RouteManager{
 		Route:   route,
 		Methods: []MethodHandler{taskRestart},
+		Version: version,
+	}
+	return &taskRoute
+}
+
+func getTasksByBuildRouteManager(route string, version int) *RouteManager {
+	tbh := &tasksByBuildHandler{}
+	tasksByBuild := MethodHandler{
+		PrefetchFunctions: []PrefetchFunc{PrefetchUser},
+		Authenticator:     &RequireUserAuthenticator{},
+		RequestHandler:    tbh.Handler(),
+		MethodType:        evergreen.MethodGet,
+	}
+
+	taskRoute := RouteManager{
+		Route:   route,
+		Methods: []MethodHandler{tasksByBuild},
 		Version: version,
 	}
 	return &taskRoute
@@ -252,6 +273,111 @@ func (tgh *taskGetHandler) Execute(sc servicecontext.ServiceContext) (ResponseDa
 
 func (trh *taskGetHandler) Handler() RequestHandler {
 	return &taskGetHandler{}
+}
+
+type tasksByBuildHandler struct {
+	*PaginationExecutor
+}
+
+type tasksByBuildArgs struct {
+	buildId string
+}
+
+func (tbh *tasksByBuildHandler) ParseAndValidate(r *http.Request) error {
+	args := tasksByBuildArgs{
+		buildId: mux.Vars(r)["build_id"],
+	}
+	if args.buildId == "" {
+		return apiv3.APIError{
+			Message:    "buildId cannot be empty",
+			StatusCode: http.StatusBadRequest,
+		}
+	}
+	return tbh.PaginationExecutor.ParseAndValidate(r)
+}
+
+func tasksByBuildPaginator(key string, limit int, args interface{}, sc servicecontext.ServiceContext) ([]model.Model,
+	*PageResult, error) {
+	btArgs, ok := args.(tasksByBuildArgs)
+	if !ok {
+		panic(incorrectArgsTypeErrorMessage)
+	}
+	// Fetch all of the tasks to be returned in this page plus the tasks used for
+	// calculating information about the next page. Here the limit is multiplied
+	// by two to fetch the next page.
+	tasks, err := sc.FindTasksByBuildId(btArgs.buildId, key, limit*2, 1)
+	if err != nil {
+		return []model.Model{}, nil, errors.Wrap(err, "Database error")
+	}
+
+	// Fetch tasks to get information about the previous page.
+	prevTasks, err := sc.FindTasksByBuildId(btArgs.buildId, key, limit, -1)
+	if err != nil {
+		return []model.Model{}, nil, errors.Wrap(err, "Database error")
+	}
+
+	pageResults := &PageResult{
+		Next: makeNextTasksPage(tasks, limit),
+		Prev: makePrevTaskspage(tasks),
+	}
+
+	lastIndex := len(tasks)
+	if nextPage != nil {
+		lastIndex = limit
+	}
+
+	// Truncate the tasks to just those that will be returned, removing the
+	// tasks that would be used to create the next page.
+	tasks = tasks[:lastIndex]
+
+	// Create an array of models which will be returned.
+	models := make([]model.Model, len(tasks))
+	for ix, st := range tasks {
+		taskModel := &model.APITask{}
+		// Build an APIModel from the task and place it into the array.
+		err = taskModel.BuildFromService(&st)
+		if err != nil {
+			return []model.Model{}, nil, errors.Wrap("API model error", err)
+		}
+		models[ix] = taskModel
+	}
+	return models, pageResults, nil
+}
+
+func makeNextTasksPage(tasks []task.Task, limit int) *Page {
+	var nextPage *Page
+	if len(tasks) > limit {
+		nextLimit := len(tasks) - limit
+		nextPage = &Page{
+			Relation: "next",
+			Key:      tasks[limit].Id,
+			Limit:    nextLimit,
+		}
+	}
+	return nextPage
+}
+
+func makePrevTasksPage(tasks []task.Task) *Page {
+	var prevPage *Page
+	if len(tasks) > 1 {
+		prevPage = &Page{
+			Relation: "prev",
+			Key:      tasks[0].Id,
+			Limit:    len(tasks),
+		}
+	}
+	return prevPage
+}
+func (hgh *tasksByBuildHandler) Handler() RequestHandler {
+	taskPaginationExecutor := &PaginationExecutor{
+		KeyQueryParam:   "start_at",
+		LimitQueryParam: "limit",
+		Paginator:       tasksByBuildPaginator,
+
+		Args: tasksByBuildArgs{},
+	}
+
+	return &tasksByBuildHandler{taskPaginationExecutor}
 }
 
 // TaskRestartHandler implements the route POST /task/{task_id}/restart. It

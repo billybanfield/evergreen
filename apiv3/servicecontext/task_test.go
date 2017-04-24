@@ -86,7 +86,7 @@ func TestFindTasksByBuildId(t *testing.T) {
 		Convey("then simply finding tasks by buildId should succeed", func() {
 			i := 0
 			for _, char := range []string{"a", "b"} {
-				found, err := serviceContext.FindTasksByBuildId(fmt.Sprintf("build_%s", char), "", 0)
+				found, err := serviceContext.FindTasksByBuildId(fmt.Sprintf("build_%s", char), "", 0, 1)
 				So(err, ShouldBeNil)
 				So(len(found), ShouldEqual, numTasks)
 				for _, foundTask := range found {
@@ -98,7 +98,7 @@ func TestFindTasksByBuildId(t *testing.T) {
 		})
 		Convey("then querying for a buildId that doesn't exist should fail"+
 			" with APIError", func() {
-			found, err := serviceContext.FindTasksByBuildId("fake_build", "", 10)
+			found, err := serviceContext.FindTasksByBuildId("fake_build", "", 10, 1)
 			So(err, ShouldNotBeNil)
 			So(len(found), ShouldEqual, 0)
 
@@ -110,7 +110,7 @@ func TestFindTasksByBuildId(t *testing.T) {
 		Convey("and a valid startTaskId is specified", func() {
 			taskStartAt := 5
 			found, err := serviceContext.FindTasksByBuildId("build_a",
-				fmt.Sprintf("task_%d", taskStartAt), 0)
+				fmt.Sprintf("task_%d", taskStartAt), 0, 1)
 			Convey("then results should start at that task", func() {
 				So(err, ShouldBeNil)
 				So(len(found), ShouldEqual, numTasks-taskStartAt)

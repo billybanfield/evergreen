@@ -112,10 +112,7 @@ func (at *APITask) BuildFromService(t interface{}) error {
 		}
 		at.Logs = ll
 	default:
-		return &apiv3.APIError{
-			StatusCode: http.StatusBadRequest,
-			Message:    "Incorrect type when unmarshalling task",
-		}
+		return errors.New("Incorrect type when unmarshalling task")
 	}
 
 	return nil

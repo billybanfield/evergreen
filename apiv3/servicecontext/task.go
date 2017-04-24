@@ -35,7 +35,7 @@ func (tc *DBTaskConnector) FindTaskById(taskId string) (*task.Task, error) {
 // FindTasksByBuildId uses the service layer's task type to query the backing database for a
 // list of task that matches buildId. It accepts the startTaskId and a limit
 // to allow for pagination of the queries. It returns results sorted by taskId.
-func (tc *DBTaskConnector) FindTasksByBuildId(buildId, startTaskId string, limit int) ([]task.Task, error) {
+func (tc *DBTaskConnector) FindTasksByBuildId(buildId, startTaskId string, limit int, sortDir int) ([]task.Task, error) {
 	var ts []task.Task
 	var err error
 	// If we have specified a taskId to start the iteration from, then search
@@ -202,8 +202,40 @@ func (mdf *MockTaskConnector) FindTasksByIds(taskIds []string) ([]task.Task, err
 // FindTaskByBuildId provides a mock implementation of the function for the
 // ServiceContext interface without needing to use a database. It returns results
 // based on the cached tasks in the MockTaskConnector.
-func (mdf *MockTaskConnector) FindTasksByBuildId(buildId, startTaskId string, limit int) ([]task.Task, error) {
-	return mdf.CachedTasks, mdf.StoredError
+func (mdf *MockTaskConnector) FindTasksByBuildId(buildId, startTaskId string, limit,
+	sortDir int) ([]task.Task, error) {
+	if mdf.StoredError != nil {
+		return []task.Task{}, mdf.StoredError
+	}
+	ofBuildId := []task.Task{}
+	for _, t := range mdf.CachedTasks {
+		if t.BuildId == buildId {
+			ofBuildId = append(ofBuildId, t)
+		}
+	}
+
+	// loop until the start task is found
+	for ix, t := range ofBuildId {
+		if t.Id == startTaskId {
+			// We've found the task
+			var tasksToReturn []task.Task
+			if sortDir < 0 {
+				if ix-limit > 0 {
+					tasksToReturn = mdf.CachedTasks[ix-(limit) : ix]
+				} else {
+					tasksToReturn = mdf.CachedTasks[:ix]
+				}
+			} else {
+				if ix+limit > len(mdf.CachedTasks) {
+					tasksToReturn = mdf.CachedTasks[ix:]
+				} else {
+					tasksToReturn = mdf.CachedTasks[ix : ix+limit]
+				}
+			}
+			return tasksToReturn, nil
+		}
+	}
+	return nil, nil
 }
 
 // SetTaskPriority changes the priority value of a task using a call to the
