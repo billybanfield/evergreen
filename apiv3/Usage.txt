@@ -1,0 +1,160 @@
+=====================
+General Functionality
+=====================
+
+**Content Type and Communication**      
+ The API accepts and returns all results in JSON. Some resources also additional URL parameters to add additional specificity to a request.
+
+**Errors**
+ When an error is encountered when completing a request, the API returns a JSON object with the HTTP status code and a message describing the error of the form:
+
+::
+
+  {
+   "status": <http_status_code>,
+   "error": <error message>
+  }
+
+**Pagination**
+ API Routes that fetch many objects return them in a JSON array and support paging through subsets of the total result set. When there are additional results for the query, access to them is populated in a 'Links' HTTP header. This header has the form: 
+
+::
+
+ "Links" : <http://<EVERGREEN_HOST>/rest/v2/path/to/resource?start_at=<pagination_key>&limit=<objects_per_page>; rel="next <http://<EVERGREEN_HOST>/rest/v2/path/to/resource?start_at=<pagination_key>&limit=<objects_per_page>; rel="prev"
+
+**Dates**
+ Date fields are returned and accepted in ISO-8601 UTC extended format. They contain 3 fractional seconds with a ‘dot’ separator. 
+
+**Empty Fields**
+ A returned object will always contain its complete list of fields. Any field that does not have an associated value will be filled with JSON's null value. 
+
+=========
+Resources
+=========
+The API has a series of implemented objects that it returns depending on the queried endpoint. 
+
+Task
+----
+
+**Base URL**: http://evergreen.mongodb.com/
+
+The task is a basic unit of work understood by evergreen. They usually comprise a suite of tests or generation of a set of artifacts. 
+
+.. list-table:: Task
+   :widths: 25 20 45
+   :header-rows: 1
+   
+   * - Name
+     - Type
+     - Description
+   * - task_id               
+     - string         
+     - Unique identifier of this task
+   * - create_time           
+     - time           
+     - Time that this task was first created
+   * - dispatch_time         
+     - time           
+     - Time that this time was dispatched
+   * - push_time             
+     - time           
+     - Time that the commit associated with this task was pushed
+   * - scheduled_time        
+     - time           
+     - Time that this task is scheduled to begin
+   * - start_time            
+     - time           
+     - Time that this task began execution
+   * - finish_time           
+     - time           
+     - Time that this task finished execution
+   * - version_id            
+     - string         
+     - An identifier of this task by its project and commit hash
+   * - branch                
+     - string         
+     - The version control branch that this task is associated with
+   * - revision              
+     - string         
+     - The version control identifier associated with this task
+   * - priority              
+     - int            
+     - The priority of this task to be run
+   * - activated             
+     - boolean        
+     - Whether the task is currently active
+   * - activated_by          
+     - string         
+     - Identifier of the process or user that activated this task
+   * - build_id              
+     - string         
+     - Identifier of the build that this task is part of
+   * - distro_id             
+     - string         
+     - Identifier of the distro that this task runs on
+   * - build_variant         
+     - string         
+     - Name of the buildvariant that this task runs on
+   * - depends_on            
+     - array          
+     - List of task_ids of task that this task depends on before beginning
+   * - display_name          
+     - string         
+     - Name of this task displayed in the UI
+   * - host_id               
+     - string         
+     - The ID of the host this task ran or is running on
+   * - restarts              
+     - int            
+     - Number of times this task has been restarted
+   * - execution             
+     - int            
+     - The number of the execution of this particular task
+   * - order                 
+     - int            
+     - The position in the commit history of commit this task is associated with
+   * - status                
+     - string         
+     - The current status of this task
+   * - status_details        
+     - status_object  
+     - Object containing additional information about the status
+   * - logs                  
+     - logs_object    
+     - Object containing additional information about the logs for this task
+   * - time_taken_ms         
+     - int            
+     - Number of milliseconds this task took during execution
+   * - expected_duration_ms  
+     - int            
+     - Number of milliseconds expected for this task to execute
+
+
+==========  ======  ===================================================================
+Logs
+----------  ------  -------------------------------------------------------------------
+Name        Type           Description
+==========  ======  ===================================================================
+all_log     string  Link to log containing merged copy of all other logs
+agent_log   string  Link to log containing logs created by the agent process
+task_log    string  Link to log containing logs created by the task execution
+system_log  string  Link to log containing logs created by the machine running the task
+==========  ======  ===================================================================
+
+
+=========  =======  ============================================
+Status
+---------  -------  --------------------------------------------
+Name        Type           Description
+=========  =======  ============================================
+status     string   The status of the completed task
+type       string   The method by which the task failed
+desc       string   Description of the final status of this task
+timed_out  boolean  Whether this task ended in a timeout
+=========  =======  ============================================
+
+Test
+----
+
+Host
+----
