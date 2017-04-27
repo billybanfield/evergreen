@@ -40,10 +40,10 @@ Task
 
 The task is a basic unit of work understood by evergreen. They usually comprise a suite of tests or generation of a set of artifacts. 
 
-.. list-table:: Task
-   :widths: 25 20 45
+.. list-table:: **Task**
+   :widths: 25 10 55
    :header-rows: 1
-   
+
    * - Name
      - Type
      - Description
@@ -130,31 +130,72 @@ The task is a basic unit of work understood by evergreen. They usually comprise 
      - Number of milliseconds expected for this task to execute
 
 
-==========  ======  ===================================================================
-Logs
-----------  ------  -------------------------------------------------------------------
-Name        Type           Description
-==========  ======  ===================================================================
-all_log     string  Link to log containing merged copy of all other logs
-agent_log   string  Link to log containing logs created by the agent process
-task_log    string  Link to log containing logs created by the task execution
-system_log  string  Link to log containing logs created by the machine running the task
-==========  ======  ===================================================================
+.. list-table:: **Logs**
+   :widths: 25 10 55
+   :header-rows: 1
 
+   * - Name        
+     - Type           
+     - Description
+   * - all_log     
+     - string  
+     - Link to log containing merged copy of all other logs
+   * - agent_log   
+     - string  
+     - Link to log containing logs created by the agent process
+   * - task_log       
+     - string  
+     - Link to log containing logs created by the task execution
+   * - system_log  
+     - string  
+     - Link to log containing logs created by the machine running the task
 
-=========  =======  ============================================
-Status
----------  -------  --------------------------------------------
-Name        Type           Description
-=========  =======  ============================================
-status     string   The status of the completed task
-type       string   The method by which the task failed
-desc       string   Description of the final status of this task
-timed_out  boolean  Whether this task ended in a timeout
-=========  =======  ============================================
+.. list-table:: **Status**
+   :widths: 25 10 55
+   :header-rows: 1
+
+   * - Name        
+     - Type           
+     - Description
+   * - status     
+     - string   
+     - The status of the completed task
+   * - type       
+     - string   
+     - The method by which the task failed
+   * - desc       
+     - string   
+     - Description of the final status of this task
+   * - timed_out  
+     - boolean  
+     - Whether this task ended in a timeout
 
 Test
 ----
+
+**Base URL**: http://evergreen.mongodb.com/
+
+A test is a sub-operation of a task performed by Evergreen. 
+
+.. list-table:: **Test**
+   :widths: 25 10 55
+   :header-rows: 1
+
+   * - Name        
+     - Type           
+     - Description
+   * - all_log     
+     - string  
+     - Link to log containing merged copy of all other logs
+   * - agent_log   
+     - string  
+     - Link to log containing logs created by the agent process
+   * - task_log       
+     - string  
+     - Link to log containing logs created by the task execution
+   * - system_log  
+     - string  
+     - Link to log containing logs created by the machine running the task
 
 Host
 ----
