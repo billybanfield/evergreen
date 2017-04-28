@@ -1,0 +1,24 @@
+======
+HOW TO
+======
+This guide presents users with information on how to perform some commonly desired actions in the Evergreen API.
+
+
+**Find all failures of a given build**
+
+ To better understand the state of a build, perhaps when attempting to determine the quality of a build for release, it is helpful to be able to fetch information about the tasks it ran. A user can page through the results of the **GET /builds/{build_id}/tasks** endpoint. The user may iterate over this data to produce meaningful statistics like the number of task failures or percentage of failures of a given build.
+
+**Find detailed information about the status of a particular tasks and its tests**
+
+ To better understand all aspects of a task failure, such as failure mode, which tests failed, and how long it took, it is helpful to fetch this information about a task. This can be accomplished using 2 API calls. One call is made to the endpoint specifically for a task **GET /tasks/{task_id}** that returns information about the task itself. A second call may then be make to **/tasks/{task_id}/tests** which delivers specific information about the tests that ran in a certain task.
+
+**Get all hosts**
+
+ Retrieving information on Evergreen's hosts can be helpful for system monitoring. This information can be retrieved using a call to **GET /hosts**, which returns a paginated list of hosts. Users may then page through the results to inspect all hosts.
+
+**Restart all failures for a commit**
+
+ Some Evergreen projects contain flakey tests and can endure spurious failures. To restart all of these tasks to gain better signal a user can fetch all of the tasks for a commit using a call to **GET /project/{project_name}/versions/{commit_hash}/tasks** and then loop over all of the returned tasks, calling **POST /tasks/{task_id}/restart** on each task which has failed.
+
+
+
