@@ -62,37 +62,104 @@ func TestFindTasksByBuildId(t *testing.T) {
 	db.SetGlobalSessionProvider(db.SessionFactoryFromConfig(testConfig))
 
 	serviceContext := &DBServiceContext{}
-	numTasks := 10
+	numBuilds := 2
+	numTasks := 100
 
 	Convey("When there are task documents in the database", t, func() {
 		testutil.HandleTestingErr(db.Clear(task.Collection), t, "Error clearing"+
 			" '%v' collection", task.Collection)
-
-		for i := 0; i < numTasks; i++ {
-			testTask := &task.Task{
-				Id:      fmt.Sprintf("task_%d", i),
-				BuildId: fmt.Sprintf("build_a"),
+		for bix := 0; bix < numTasks; bix++ {
+			for i := 0; i < numTasks; i++ {
+				status := "pass"
+				if i%2 == 0 {
+					status = "fail"
+				}
+				testTask := &task.Task{
+					Id:      fmt.Sprintf("task_%d", i*(bix+1)),
+					BuildId: fmt.Sprintf("build_%d", bix),
+					Status:  status,
+				}
+				So(testTask.Insert(), ShouldBeNil)
 			}
-			So(testTask.Insert(), ShouldBeNil)
-		}
-		for i := 0; i < numTasks; i++ {
-			testTask := &task.Task{
-				Id:      fmt.Sprintf("task_%d", i+numTasks),
-				BuildId: fmt.Sprintf("build_b"),
-			}
-			So(testTask.Insert(), ShouldBeNil)
 		}
 
 		Convey("then simply finding tasks by buildId should succeed", func() {
-			i := 0
-			for _, char := range []string{"a", "b"} {
-				found, err := serviceContext.FindTasksByBuildId(fmt.Sprintf("build_%s", char), "", "", 0, 1)
+			for bix := 0; bix < numBuilds; bix++ {
+				found, err := serviceContext.FindTasksByBuildId(fmt.Sprintf("build_%d", bix), "", "", 0, 1)
 				So(err, ShouldBeNil)
 				So(len(found), ShouldEqual, numTasks)
-				for _, foundTask := range found {
-					So(foundTask.BuildId, ShouldEqual, fmt.Sprintf("build_%s", char))
-					So(foundTask.Id, ShouldEqual, fmt.Sprintf("task_%d", i))
-					i++
+				for i, foundTask := range found {
+					So(foundTask.BuildId, ShouldEqual, fmt.Sprintf("build_%d", bix))
+					So(foundTask.Id, ShouldEqual, fmt.Sprintf("task_%d", i*(bix+1)))
+				}
+			}
+		})
+		Convey("then properly finding each set of tasks should succeed", func() {
+			for bix := 0; bix < numBuilds; bix++ {
+				foundTasks, err := serviceContext.FindTasksByBuildId(fmt.Sprintf("build_%d", bix),
+					"", "", 0, 1)
+				So(err, ShouldBeNil)
+				So(len(foundTasks), ShouldEqual, numTasks)
+				for tix, t := range foundTasks {
+					So(t.Id, ShouldEqual, tix*(bix+1))
+				}
+			}
+		})
+		Convey("then properly finding only tasks from taskid should return correct set", func() {
+			buildId := "build_1"
+			for _, sort := range []int{1, -1} {
+				for i := 0; i < numTasks; i++ {
+					foundTasks, err := serviceContext.FindTasksByBuildId(buildId, fmt.Sprintf("task_%d", i),
+						"", 0, sort)
+					So(err, ShouldBeNil)
+
+					startAt := 0
+					if sort < 0 {
+						startAt = numTasks - 1
+					}
+
+					So(len(foundTasks), ShouldEqual, (numTasks-startAt)-i*sort)
+					for ix, t := range foundTasks {
+						index := ix
+						if sort > 0 {
+							index += i
+						}
+						So(t.Id, ShouldEqual, fmt.Sprintf("task_%d_%d", i, 1))
+					}
+				}
+			}
+		})
+		/*
+			Convey("then adding a limit should return correct number and set of results",
+				func() {
+					commitId := "commit_0"
+					projectId := "project_0"
+					limit := 2
+					tids := taskIds[0][0]
+					for i := 0; i < numTasks/limit; i++ {
+						index := i * limit
+						taskName := tids[index]
+						foundTasks, err := serviceContext.FindTasksByProjectAndCommit(projectId, commitId,
+							taskName, "", limit, 1)
+						So(err, ShouldBeNil)
+						So(len(foundTasks), ShouldEqual, limit)
+						for ix, t := range foundTasks {
+							So(t.Id, ShouldEqual, tids[ix+index])
+						}
+					}
+
+				})
+		*/
+		Convey("then properly finding only tasks with status should return correct set", func() {
+			for _, status := range []string{"pass", "fail"} {
+				for bix := 0; bix < numBuilds; bix++ {
+					foundTasks, err := serviceContext.FindTasksByBuildId(fmt.Sprintf("build_%d", bix),
+						"", status, 0, 1)
+					So(err, ShouldBeNil)
+					So(len(foundTasks), ShouldEqual, numTasks/2)
+					for _, t := range foundTasks {
+						So(t.Status, ShouldEqual, status)
+					}
 				}
 			}
 		})
@@ -107,9 +174,9 @@ func TestFindTasksByBuildId(t *testing.T) {
 			So(ok, ShouldBeTrue)
 			So(apiErr.StatusCode, ShouldEqual, http.StatusNotFound)
 		})
-		Convey("and a valid startTaskId is specified", func() {
+		Convey("when a valid startTaskId is specified", func() {
 			taskStartAt := 5
-			found, err := serviceContext.FindTasksByBuildId("build_a",
+			found, err := serviceContext.FindTasksByBuildId("build_1",
 				fmt.Sprintf("task_%d", taskStartAt), "", 0, 1)
 			Convey("then results should start at that task", func() {
 				So(err, ShouldBeNil)
