@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	incorrectArgsTypeErrorMessge = "programmer error: incorrect type for paginator args"
+	incorrectArgsTypeErrorMessage = "programmer error: incorrect type for paginator args"
 )
 
 func getTaskRestartRouteManager(route string, version int) *RouteManager {
@@ -281,11 +281,13 @@ type tasksByBuildHandler struct {
 
 type tasksByBuildArgs struct {
 	buildId string
+	status  string
 }
 
 func (tbh *tasksByBuildHandler) ParseAndValidate(r *http.Request) error {
 	args := tasksByBuildArgs{
 		buildId: mux.Vars(r)["build_id"],
+		status:  r.URL.Query().Get("status"),
 	}
 	if args.buildId == "" {
 		return apiv3.APIError{
@@ -293,6 +295,7 @@ func (tbh *tasksByBuildHandler) ParseAndValidate(r *http.Request) error {
 			StatusCode: http.StatusBadRequest,
 		}
 	}
+	tbh.Args = args
 	return tbh.PaginationExecutor.ParseAndValidate(r)
 }
 
@@ -305,20 +308,26 @@ func tasksByBuildPaginator(key string, limit int, args interface{}, sc serviceco
 	// Fetch all of the tasks to be returned in this page plus the tasks used for
 	// calculating information about the next page. Here the limit is multiplied
 	// by two to fetch the next page.
-	tasks, err := sc.FindTasksByBuildId(btArgs.buildId, key, limit*2, 1)
+	tasks, err := sc.FindTasksByBuildId(btArgs.buildId, key, btArgs.status, limit*2, 1)
 	if err != nil {
-		return []model.Model{}, nil, errors.Wrap(err, "Database error")
+		if _, ok := err.(*apiv3.APIError); !ok {
+			err = errors.Wrap(err, "Database error")
+		}
+		return []model.Model{}, nil, err
 	}
 
 	// Fetch tasks to get information about the previous page.
-	prevTasks, err := sc.FindTasksByBuildId(btArgs.buildId, key, limit, -1)
+	prevTasks, err := sc.FindTasksByBuildId(btArgs.buildId, key, btArgs.status, limit, -1)
 	if err != nil {
-		return []model.Model{}, nil, errors.Wrap(err, "Database error")
+		if apiErr, ok := err.(*apiv3.APIError); !ok || apiErr.StatusCode != http.StatusNotFound {
+			return []model.Model{}, nil, errors.Wrap(err, "Database error")
+		}
 	}
 
+	nextPage := makeNextTasksPage(tasks, limit)
 	pageResults := &PageResult{
-		Next: makeNextTasksPage(tasks, limit),
-		Prev: makePrevTaskspage(tasks),
+		Next: nextPage,
+		Prev: makePrevTasksPage(prevTasks),
 	}
 
 	lastIndex := len(tasks)
@@ -337,37 +346,17 @@ func tasksByBuildPaginator(key string, limit int, args interface{}, sc serviceco
 		// Build an APIModel from the task and place it into the array.
 		err = taskModel.BuildFromService(&st)
 		if err != nil {
-			return []model.Model{}, nil, errors.Wrap("API model error", err)
+			return []model.Model{}, nil, errors.Wrap(err, "API model error")
+		}
+		err = taskModel.BuildFromService(sc.GetURL())
+		if err != nil {
+			return []model.Model{}, nil, errors.Wrap(err, "API model error")
 		}
 		models[ix] = taskModel
 	}
 	return models, pageResults, nil
 }
 
-func makeNextTasksPage(tasks []task.Task, limit int) *Page {
-	var nextPage *Page
-	if len(tasks) > limit {
-		nextLimit := len(tasks) - limit
-		nextPage = &Page{
-			Relation: "next",
-			Key:      tasks[limit].Id,
-			Limit:    nextLimit,
-		}
-	}
-	return nextPage
-}
-
-func makePrevTasksPage(tasks []task.Task) *Page {
-	var prevPage *Page
-	if len(tasks) > 1 {
-		prevPage = &Page{
-			Relation: "prev",
-			Key:      tasks[0].Id,
-			Limit:    len(tasks),
-		}
-	}
-	return prevPage
-}
 func (hgh *tasksByBuildHandler) Handler() RequestHandler {
 	taskPaginationExecutor := &PaginationExecutor{
 		KeyQueryParam:   "start_at",

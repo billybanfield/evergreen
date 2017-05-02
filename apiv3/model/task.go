@@ -2,12 +2,11 @@ package model
 
 import (
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/evergreen-ci/evergreen/apimodels"
-	"github.com/evergreen-ci/evergreen/apiv3"
 	"github.com/evergreen-ci/evergreen/model/task"
+	"github.com/pkg/errors"
 )
 
 const (
