@@ -2,11 +2,15 @@
 General Functionality
 =====================
 
-**Content Type and Communication**      
- The API accepts and returns all results in JSON. Some resources also additional URL parameters to add additional specificity to a request.
+Content Type and Communication
+------------------------------
+ The API accepts and returns all results in JSON. Some resources also additional 
+URL parameters to add additional specificity to a request.
 
-**Errors**
- When an error is encountered when completing a request, the API returns a JSON object with the HTTP status code and a message describing the error of the form:
+Errors
+------
+ When an error is encountered when completing a request, the API returns a JSON 
+object with the HTTP status code and a message describing the error of the form:
 
 ::
 
@@ -15,30 +19,40 @@ General Functionality
    "error": <error message>
   }
 
-**Pagination**
- API Routes that fetch many objects return them in a JSON array and support paging through subsets of the total result set. When there are additional results for the query, access to them is populated in a 'Links' HTTP header. This header has the form: 
+Pagination
+----------
+ API Routes that fetch many objects return them in a JSON array and support paging 
+through subsets of the total result set. When there are additional results for the 
+query, access to them is populated in a 'Links' HTTP header. This header has the form: 
 
 ::
 
- "Links" : <http://<EVERGREEN_HOST>/rest/v2/path/to/resource?start_at=<pagination_key>&limit=<objects_per_page>; rel="next <http://<EVERGREEN_HOST>/rest/v2/path/to/resource?start_at=<pagination_key>&limit=<objects_per_page>; rel="prev"
+ "Links" : <http://<EVERGREEN_HOST>/rest/v2/path/to/resource?start_at=<pagination_key>&limit=<objects_per_page>; 
+rel="next <http://<EVERGREEN_HOST>/rest/v2/path/to/resource?start_at=<pagination_key>&limit=<objects_per_page>; rel="prev"
 
-**Dates**
- Date fields are returned and accepted in ISO-8601 UTC extended format. They contain 3 fractional seconds with a ‘dot’ separator. 
+Dates
+-----
+ Date fields are returned and accepted in ISO-8601 UTC extended format. They contain 
+3 fractional seconds with a ‘dot’ separator. 
 
-**Empty Fields**
- A returned object will always contain its complete list of fields. Any field that does not have an associated value will be filled with JSON's null value. 
+Empty Fields
+------------
+ A returned object will always contain its complete list of fields. Any field 
+that does not have an associated value will be filled with JSON's null value. 
 
 =========
 Resources
 =========
-The API has a series of implemented objects that it returns depending on the queried endpoint. 
+The API has a series of implemented objects that it returns depending on the 
+queried endpoint. 
 
 Task
 ----
 
 **Base URL**: http://evergreen.mongodb.com/rest/v2/
 
- The task is a basic unit of work understood by evergreen. They usually comprise a suite of tests or generation of a set of artifacts. 
+ The task is a basic unit of work understood by evergreen. They usually comprise 
+a suite of tests or generation of a set of artifacts. 
 
 Objects
 -------
@@ -232,7 +246,8 @@ Endpoints
 **Change A Task's Execution Status**
   PATCH /tasks/{task_id} 
 
-  Change the current execution status of a task. Accepts a JSON body with the new task status to be set.
+  Change the current execution status of a task. Accepts a JSON body with the new 
+task status to be set.
 
 .. list-table:: **Body**
    :widths: 25 10 55
