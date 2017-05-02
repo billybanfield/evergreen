@@ -75,7 +75,7 @@ func TestFindTasksByBuildId(t *testing.T) {
 					status = "fail"
 				}
 				testTask := &task.Task{
-					Id:      fmt.Sprintf("task_%d", i*(bix+1)),
+					Id:      fmt.Sprintf("task_%d", i+numTasks*bix),
 					BuildId: fmt.Sprintf("build_%d", bix),
 					Status:  status,
 				}
