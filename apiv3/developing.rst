@@ -209,10 +209,75 @@ RouteManager
  The RouteManager type holds all of the methods associated with a particular API
 route. It holds these as an array of MethodHandlers. It also contains the path
 by which this route may be accessed, and the version of the API that this is 
-implemented as part of. When adding to the API there may already be a RouteManger
-in existence for the method being devloped. For example, if a method for ``GET
-/tasks/<task_id>`` is already implemented, then a new route manager is not required
-when createing ``POST /tasks/<task_id>``. Its implementation only needs to be added
-to the existing RouteManager. 
+implemented as part of. 
+
+When adding to the API there may already be a RouteManger in existence for the 
+method being devloped. For example, if a method for ``GET /tasks/<task_id>`` is 
+already implemented, then a new route manager is not required when createing ``POST /tasks/<task_id>``. 
+Its implementation only needs to be added to the existing RouteManager. 
+
+Once created, the RouteManager must be registered onto the mux.Router with the
+ServiceContext by calling route.Register(router, serviceContext).
+
+Adding Models
+-------------
+
+ Each model is kept in the ``model`` package of the REST v2 API in its own file.
+To create a new model, define a struct containing all of the fields that it will return
+and implement its two main interface methods ``BuildFromService`` and ``ToService``.
+Be sure to include struct tags to the define the names the fields will have when
+serialized to JSON. 
+
+Guidlines for Creating Models
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ - Include as much data as a user is likely to want when inspecting this resource.
+   This is likely to be more information than seems directly needed, but there is
+   little penalty to its inclusion. 
+ - Use APIString instead of Golang's string type. APIString serializes emtpy strings
+   as JSON null instead of Go's zero type of '""'
+ - Use APITime instead of go's time type. APITime is a type that wraps Go's time.Time
+   and automatically correctly serializes it to ISO-8601 UTC time
+ - Return an error when TypeCasting fails.
+
+Model Methods
+~~~~~~~~~~~~~
+
+BuildFromService(in interface{}) error
+``````````````````````````````````````
+BuildFromService fetches all needed data from the passed in object and sets them
+on the model. BuildFromService may sometimes be called multiple times with different
+types that all contain data to build up the model object. In this case, a type switch
+is likely necessary to determine what has been passed in. 
+
+ToService()(interface{}, error)
+```````````````````````````````
+ToService creates an as-complete-as-possible version of the service layer's version
+of this model. For example, if this is is a REST v2 Task model, the ToService method
+creates a service layer Task and sets all of the fields it is able to and returns it.
 
 
+Adding to the ServiceContext
+----------------------------
+
+The ``ServiceContext`` is a very large interface that defines how to access the main 
+state of the database and data central to Evergreen's function. All methods of the
+ServiceContext are contained in the ``servicecontext`` package in files depending
+on the main type they allow access to (i.e. all test access is contained in servicecontext/test.go).
+
+ServiceContext should only be done when the desired functionality cannot be performed
+using a combination of the methods it already contains OR when such combination would
+be unseemingly slow or expensive. 
+
+To add to the ServiceContext, add the method signature into the interface in 
+``servicecontext/servicecontext.go``. Next, add the implementation that interacts
+with the database to the database backed object. These objects are named by the
+resource they allow access to. The object that allows access to Hosts is called
+``DBHostConnector``. Finally, add a mock implementation to the mock object. For
+Hosts again, this object would be called ``MockHostConnector``.
+
+Implementing database backed methods requires using methods in Evergreen's ``model``
+package. As much database specific information as possible should be kept out of
+the these methods. For example, if a new aggregation pipeline is needed to complete
+the request, it should be defined int the Evergreen model package and used only
+to aggregate in the method. 
