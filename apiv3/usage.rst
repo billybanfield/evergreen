@@ -11,10 +11,12 @@ Content Type and Communication
  The API accepts and returns all results in JSON. Some resources also allow 
 URL parameters to provide additional specificity to a request.
 
+
 Errors
 ------
  When an error is encountered during a request, the API returns a JSON 
 object with the HTTP status code and a message describing the error of the form:
+
 
 ::
 
@@ -29,6 +31,7 @@ Pagination
 through subsets of the total result set. When there are additional results for the 
 query, access to them is populated in a 'Links' HTTP header. This header has the form: 
 
+
 ::
 
  "Links" : <http://<EVERGREEN_HOST>/rest/v2/path/to/resource?start_at=<pagination_key>&limit=<objects_per_page>; rel="next"
@@ -40,17 +43,20 @@ Dates
  Date fields are returned and accepted in ISO-8601 UTC extended format. They contain 
 3 fractional seconds with a ‘dot’ separator. 
 
+
 Empty Fields
 ------------
 
  A returned object will always contain its complete list of fields. Any field 
 that does not have an associated value will be filled with JSON's null value. 
 
+
 Resources
 =========
 
 The API has a series of implemented objects that it returns depending on the 
 queried endpoint. 
+
 
 Task
 ----
@@ -59,6 +65,8 @@ Task
 
  The task is a basic unit of work understood by evergreen. They usually comprise 
 a suite of tests or generation of a set of artifacts. 
+
+
 
 Objects
 ~~~~~~~
@@ -287,15 +295,16 @@ task status to be set.
      - The priority of this task's execution. Limited to 100 for non-superusers
 
 
- For example, to set activate the task and set its status priority to 100, add 
- the following JSON to the request body:
+
+For example, to set activate the task and set its status priority to 100, add 
+the following JSON to the request body:
 
 
  ::
 
  {
-   "activated": true,
-   "priority": 100
+  "activated": true,
+  "priority": 100
  }
 
 
